@@ -69,22 +69,19 @@ function integratePlayer(delta) {
     return def && def.solid;
   }
 
-  // 4 hauteurs de test (comme Minecraft)
-  const h1 = player.y + 0.15;
-  const h2 = player.y + height * 0.33;
-  const h3 = player.y + height * 0.66;
-  const h4 = player.y + height - 0.15;
+  // Hauteurs de test basées sur ny (position prévue)
+  const h1 = ny + 0.1;
+  const h2 = ny + height * 0.5;
+  const h3 = ny + height - 0.1;
 
   // --- COLLISION X ---
   if (
     isSolidAt(nx + radius, h1, player.z) ||
     isSolidAt(nx + radius, h2, player.z) ||
     isSolidAt(nx + radius, h3, player.z) ||
-    isSolidAt(nx + radius, h4, player.z) ||
     isSolidAt(nx - radius, h1, player.z) ||
     isSolidAt(nx - radius, h2, player.z) ||
-    isSolidAt(nx - radius, h3, player.z) ||
-    isSolidAt(nx - radius, h4, player.z)
+    isSolidAt(nx - radius, h3, player.z)
   ) {
     player.vx = 0;
     nx = player.x;
@@ -95,11 +92,9 @@ function integratePlayer(delta) {
     isSolidAt(player.x, h1, nz + radius) ||
     isSolidAt(player.x, h2, nz + radius) ||
     isSolidAt(player.x, h3, nz + radius) ||
-    isSolidAt(player.x, h4, nz + radius) ||
     isSolidAt(player.x, h1, nz - radius) ||
     isSolidAt(player.x, h2, nz - radius) ||
-    isSolidAt(player.x, h3, nz - radius) ||
-    isSolidAt(player.x, h4, nz - radius)
+    isSolidAt(player.x, h3, nz - radius)
   ) {
     player.vz = 0;
     nz = player.z;
@@ -124,17 +119,10 @@ function integratePlayer(delta) {
     }
   }
 
-  // --- ANTI COLLAGE AMÉLIORÉ ---
-  const speed = Math.hypot(player.vx, player.vz);
-
-  if (speed < 0.01) {
-    // push plus fort si collé
-    nx += (Math.random() - 0.5) * 0.02;
-    nz += (Math.random() - 0.5) * 0.02;
-  } else {
-    // push léger normal
-    nx += player.vx * delta * 0.05;
-    nz += player.vz * delta * 0.05;
+  // --- ANTI COLLAGE (léger, stable) ---
+  if (!player.onGround) {
+    nx += player.vx * delta * 0.02;
+    nz += player.vz * delta * 0.02;
   }
 
   player.x = nx;
@@ -145,3 +133,4 @@ function integratePlayer(delta) {
     spawnPlayer();
   }
 }
+
