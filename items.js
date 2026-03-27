@@ -27,12 +27,34 @@ const ITEM = {
   GOLD_ORE: BLOCK.GOLD_ORE,
   DIAMOND_ORE: BLOCK.DIAMOND_ORE,
 
-  // outils (IDs séparés)
+  // outils
   WOOD_PICKAXE: 100,
   STONE_PICKAXE: 101,
   IRON_PICKAXE: 102,
-  DIAMOND_PICKAXE: 103
+  DIAMOND_PICKAXE: 103,
+
+  // armures cuir
+  LEATHER_HELMET: 200,
+  LEATHER_CHEST: 201,
+  LEATHER_LEGS: 202,
+  LEATHER_BOOTS: 203,
+
+  // armures fer
+  IRON_HELMET: 210,
+  IRON_CHEST: 211,
+  IRON_LEGS: 212,
+  IRON_BOOTS: 213,
+
+  // armures diamant
+  DIAMOND_HELMET: 220,
+  DIAMOND_CHEST: 221,
+  DIAMOND_LEGS: 222,
+  DIAMOND_BOOTS: 223
 };
+
+/* ============================
+   DEFINITIONS DES ITEMS
+   ============================ */
 
 const ITEM_DEFS = {
   // blocs
@@ -53,7 +75,25 @@ const ITEM_DEFS = {
   [ITEM.GOLD_ORE]:    { type: ITEM_TYPE.BLOCK, blockId: BLOCK.GOLD_ORE },
   [ITEM.DIAMOND_ORE]: { type: ITEM_TYPE.BLOCK, blockId: BLOCK.DIAMOND_ORE },
 
-  // outils (tu pourras utiliser hardness + type plus tard)
+  // armures cuir
+  [ITEM.LEATHER_HELMET]: { type: ITEM_TYPE.MISC, armor: ARMOR_STATS.LEATHER },
+  [ITEM.LEATHER_CHEST]:  { type: ITEM_TYPE.MISC, armor: ARMOR_STATS.LEATHER },
+  [ITEM.LEATHER_LEGS]:   { type: ITEM_TYPE.MISC, armor: ARMOR_STATS.LEATHER },
+  [ITEM.LEATHER_BOOTS]:  { type: ITEM_TYPE.MISC, armor: ARMOR_STATS.LEATHER },
+
+  // armures fer
+  [ITEM.IRON_HELMET]: { type: ITEM_TYPE.MISC, armor: ARMOR_STATS.IRON },
+  [ITEM.IRON_CHEST]:  { type: ITEM_TYPE.MISC, armor: ARMOR_STATS.IRON },
+  [ITEM.IRON_LEGS]:   { type: ITEM_TYPE.MISC, armor: ARMOR_STATS.IRON },
+  [ITEM.IRON_BOOTS]:  { type: ITEM_TYPE.MISC, armor: ARMOR_STATS.IRON },
+
+  // armures diamant
+  [ITEM.DIAMOND_HELMET]: { type: ITEM_TYPE.MISC, armor: ARMOR_STATS.DIAMOND },
+  [ITEM.DIAMOND_CHEST]:  { type: ITEM_TYPE.MISC, armor: ARMOR_STATS.DIAMOND },
+  [ITEM.DIAMOND_LEGS]:   { type: ITEM_TYPE.MISC, armor: ARMOR_STATS.DIAMOND },
+  [ITEM.DIAMOND_BOOTS]:  { type: ITEM_TYPE.MISC, armor: ARMOR_STATS.DIAMOND },
+
+  // outils
   [ITEM.WOOD_PICKAXE]: {
     type: ITEM_TYPE.TOOL,
     toolClass: "pickaxe",
