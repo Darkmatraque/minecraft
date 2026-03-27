@@ -1,8 +1,8 @@
 // Gestion du joueur FPS (position, physique, collisions)
 
 const PLAYER = {
-  height: 1.9,      // ~2 blocs
-  radius: 0.30,     // hitbox plus fine
+  height: 1.9,
+  radius: 0.30,
   eyeHeight: 1.62,
   speed: 4.3,
   jumpSpeed: 8,
@@ -69,19 +69,22 @@ function integratePlayer(delta) {
     return def && def.solid;
   }
 
-  // Hauteurs de test (évite les collisions trop basses)
-  const feetY = player.y + 0.15;
-  const midY = player.y + height * 0.5;
-  const headY = player.y + height - 0.15;
+  // 4 hauteurs de test (comme Minecraft)
+  const h1 = player.y + 0.15;
+  const h2 = player.y + height * 0.33;
+  const h3 = player.y + height * 0.66;
+  const h4 = player.y + height - 0.15;
 
   // --- COLLISION X ---
   if (
-    isSolidAt(nx + radius, feetY, player.z) ||
-    isSolidAt(nx + radius, midY, player.z) ||
-    isSolidAt(nx + radius, headY, player.z) ||
-    isSolidAt(nx - radius, feetY, player.z) ||
-    isSolidAt(nx - radius, midY, player.z) ||
-    isSolidAt(nx - radius, headY, player.z)
+    isSolidAt(nx + radius, h1, player.z) ||
+    isSolidAt(nx + radius, h2, player.z) ||
+    isSolidAt(nx + radius, h3, player.z) ||
+    isSolidAt(nx + radius, h4, player.z) ||
+    isSolidAt(nx - radius, h1, player.z) ||
+    isSolidAt(nx - radius, h2, player.z) ||
+    isSolidAt(nx - radius, h3, player.z) ||
+    isSolidAt(nx - radius, h4, player.z)
   ) {
     player.vx = 0;
     nx = player.x;
@@ -89,12 +92,14 @@ function integratePlayer(delta) {
 
   // --- COLLISION Z ---
   if (
-    isSolidAt(player.x, feetY, nz + radius) ||
-    isSolidAt(player.x, midY, nz + radius) ||
-    isSolidAt(player.x, headY, nz + radius) ||
-    isSolidAt(player.x, feetY, nz - radius) ||
-    isSolidAt(player.x, midY, nz - radius) ||
-    isSolidAt(player.x, headY, nz - radius)
+    isSolidAt(player.x, h1, nz + radius) ||
+    isSolidAt(player.x, h2, nz + radius) ||
+    isSolidAt(player.x, h3, nz + radius) ||
+    isSolidAt(player.x, h4, nz + radius) ||
+    isSolidAt(player.x, h1, nz - radius) ||
+    isSolidAt(player.x, h2, nz - radius) ||
+    isSolidAt(player.x, h3, nz - radius) ||
+    isSolidAt(player.x, h4, nz - radius)
   ) {
     player.vz = 0;
     nz = player.z;
@@ -104,7 +109,6 @@ function integratePlayer(delta) {
   player.onGround = false;
 
   if (player.vy > 0) {
-    // plafond
     if (
       isSolidAt(nx, ny + height, nz) ||
       isSolidAt(nx, ny + height - 0.1, nz)
@@ -113,7 +117,6 @@ function integratePlayer(delta) {
       ny = Math.floor(ny + height) - height - 0.001;
     }
   } else {
-    // sol
     if (isSolidAt(nx, ny - 0.05, nz)) {
       player.vy = 0;
       player.onGround = true;
@@ -121,13 +124,19 @@ function integratePlayer(delta) {
     }
   }
 
-  // --- ANTI COLLAGE (push-away léger) ---
-  if (!player.onGround) {
+  // --- ANTI COLLAGE AMÉLIORÉ ---
+  const speed = Math.hypot(player.vx, player.vz);
+
+  if (speed < 0.01) {
+    // push plus fort si collé
+    nx += (Math.random() - 0.5) * 0.02;
+    nz += (Math.random() - 0.5) * 0.02;
+  } else {
+    // push léger normal
     nx += player.vx * delta * 0.05;
     nz += player.vz * delta * 0.05;
   }
 
-  // Mise à jour finale
   player.x = nx;
   player.y = ny;
   player.z = nz;
@@ -136,4 +145,3 @@ function integratePlayer(delta) {
     spawnPlayer();
   }
 }
-
