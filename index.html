@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Mini Minecraft 3D – Web</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="ui">
+    <div id="crosshair">+</div>
+    <div id="hint">Clique dans la fenêtre puis appuie sur clic gauche pour capturer la souris.</div>
+    <div id="info">
+      <span id="biome-label">Biome: --</span>
+      <span id="pos-label">X: 0 Y: 0 Z: 0</span>
+    </div>
+    <div id="hotbar"></div>
+  </div>
+
+  <canvas id="game-canvas"></canvas>
+
+  <!-- Three.js + PointerLockControls depuis CDN -->
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+  <script src="https://unpkg.com/three@0.160.0/examples/js/controls/PointerLockControls.js"></script>
+
+  <script src="noise.js"></script>
+  <script src="blocks.js"></script>
+  <script src="biomes.js"></script>
+  <script src="world.js"></script>
+  <script src="player.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
