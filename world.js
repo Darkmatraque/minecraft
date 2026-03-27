@@ -195,6 +195,43 @@ function generateTerrain() {
 }
 
 // ============================
+//  MINERAIS (SAFE STUB SIMPLE)
+// ============================
+
+function generateOres() {
+  // Version simple et sûre : quelques minerais dans la pierre
+  for (let x = 0; x < WORLD.WIDTH; x++) {
+    for (let z = 0; z < WORLD.DEPTH; z++) {
+      for (let y = 5; y < 40; y++) {
+        const id = getBlock(x, y, z);
+        if (id === BLOCK.STONE) {
+          // bruit simple pour décider si on met un minerai
+          const nx = x / 32;
+          const ny = y / 32;
+          const nz = z / 32;
+          const val = heightNoise.noise(nx, nz + ny);
+          if (val > 0.72) {
+            // choisis un minerai existant dans tes BLOCK_DEFS
+            // adapte ces IDs à ton enum BLOCK
+            const oreId = BLOCK.COAL_ORE || BLOCK.STONE;
+            setBlock(x, y, z, oreId);
+          }
+        }
+      }
+    }
+  }
+}
+
+// ============================
+//  STRUCTURES (SAFE STUB)
+// ============================
+
+function generateStructures() {
+  // Pour l’instant, rien. Tu pourras ajouter des arbres, maisons, etc.
+  // L’important est que la fonction existe pour ne plus casser initWorld().
+}
+
+// ============================
 //  INIT MONDE
 // ============================
 
