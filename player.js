@@ -1,90 +1,132 @@
-// ============================
-//  PLAYER (VERSION ULTRA SIMPLE)
-// ============================
-
-let player = {
-  x: 0,
-  y: 70,
-  z: 0,
-  vy: 0,
-  onGround: false
+const PLAYER = {
+  height: 1.9,
+  radius: 0.30,
+  eyeHeight: 1.62,
+  speed: 4.3,
+  jumpSpeed: 8,
+  gravity: 20
 };
 
-const PLAYER = {
-  eyeHeight: 1.6,
-  speed: 6,
-  jumpSpeed: 8,
-  gravity: -25
+let player = {
+  x: WORLD.WIDTH / 2,
+  y: 60,
+  z: WORLD.DEPTH / 2,
+  vx: 0,
+  vy: 0,
+  vz: 0,
+  onGround: false
 };
 
 function spawnPlayer() {
   const sx = Math.floor(WORLD.WIDTH / 2);
   const sz = Math.floor(WORLD.DEPTH / 2);
-  const sy = getSurfaceHeightAt(sx, sz) + 2;
+  const sy = getSurfaceHeightAt(sx, sz);
 
   player.x = sx + 0.5;
   player.z = sz + 0.5;
-  player.y = sy;
-  player.vy = 0;
+  player.y = sy + PLAYER.height + 0.2;
+  player.vx = player.vy = player.vz = 0;
   player.onGround = false;
 }
 
-function isSolid(x, y, z) {
-  const id = getBlock(Math.floor(x), Math.floor(y), Math.floor(z));
-  const def = BLOCK_DEFS[id];
-  return def && def.solid;
-}
+function movePlayer(delta, controlsDir) {
+  const accel = PLAYER.speed;
 
-function movePlayer(delta, dir) {
-  // mouvement horizontal
-  let dx = 0;
-  let dz = 0;
+  const forward = controlsDir.forward;
+  const right = controlsDir.right;
 
-  if (dir.move) {
-    dx = dir.forward.x * PLAYER.speed * delta + dir.right.x * PLAYER.speed * delta;
-    dz = dir.forward.z * PLAYER.speed * delta + dir.right.z * PLAYER.speed * delta;
+  player.vx = (forward.x * accel + right.x * accel) * controlsDir.move;
+  player.vz = (forward.z * accel + right.z * accel) * controlsDir.move;
+
+  if (!player.onGround) {
+    player.vy -= PLAYER.gravity * delta;
   }
 
-  // tentative X
-  let nx = player.x + dx;
-  if (!isSolid(nx, player.y, player.z)) {
-    player.x = nx;
-  }
-
-  // tentative Z
-  let nz = player.z + dz;
-  if (!isSolid(player.x, player.y, nz)) {
-    player.z = nz;
-  }
-
-  // gravité
-  player.vy += PLAYER.gravity * delta;
-
-  // tentative Y
-  let ny = player.y + player.vy * delta;
-
-  if (player.vy <= 0) {
-    // collision sol
-    if (isSolid(player.x, ny - 0.1, player.z)) {
-      player.y = Math.floor(ny) + 0.001;
-      player.vy = 0;
-      player.onGround = true;
-    } else {
-      player.y = ny;
-      player.onGround = false;
-    }
-  } else {
-    // collision plafond
-    if (isSolid(player.x, ny + 1.7, player.z)) {
-      player.vy = 0;
-    } else {
-      player.y = ny;
-    }
-  }
-
-  // saut
-  if (dir.jump && player.onGround) {
+  if (controlsDir.jump && player.onGround) {
     player.vy = PLAYER.jumpSpeed;
     player.onGround = false;
   }
+
+  integratePlayer(delta);
 }
+
+function integratePlayer(delta) {
+  let nx = player.x + player.vx * delta;
+  let ny = player.y + player.vy * delta;
+  let nz = player.z + player.vz * delta;
+
+  const radius = PLAYER.radius;
+  const height = PLAYER.height;
+
+  function isSolidAt(px, py, pz) {
+    const bx = Math.floor(px);
+    const by = Math.floor(py);
+    const bz = Math.floor(pz);
+    const id = getBlock(bx, by, bz);
+    const def = BLOCK_DEFS[id];
+    return def && def.solid;
+  }
+
+  const h1 = ny + 0.1;
+  const h2 = ny + height * 0.5;
+  const h3 = ny + height - 0.1;
+
+  // X
+  if (
+    isSolidAt(nx + radius, h1, player.z) ||
+    isSolidAt(nx + radius, h2, player.z) ||
+    isSolidAt(nx + radius, h3, player.z) ||
+    isSolidAt(nx - radius, h1, player.z) ||
+    isSolidAt(nx - radius, h2, player.z) ||
+    isSolidAt(nx - radius, h3, player.z)
+  ) {
+    player.vx = 0;
+    nx = player.x;
+  }
+
+  // Z
+  if (
+    isSolidAt(player.x, h1, nz + radius) ||
+    isSolidAt(player.x, h2, nz + radius) ||
+    isSolidAt(player.x, h3, nz + radius) ||
+    isSolidAt(player.x, h1, nz - radius) ||
+    isSolidAt(player.x, h2, nz - radius) ||
+    isSolidAt(player.x, h3, nz - radius)
+  ) {
+    player.vz = 0;
+    nz = player.z;
+  }
+
+  // Y
+  player.onGround = false;
+
+  if (player.vy > 0) {
+    if (
+      isSolidAt(nx, ny + height, nz) ||
+      isSolidAt(nx, ny + height - 0.1, nz)
+    ) {
+      player.vy = 0;
+      ny = Math.floor(ny + height) - height - 0.001;
+    }
+  } else {
+    if (isSolidAt(nx, ny - 0.05, nz)) {
+      player.vy = 0;
+      player.onGround = true;
+      ny = Math.floor(ny) + 0.001;
+    }
+  }
+
+  if (!player.onGround) {
+    nx += player.vx * delta * 0.02;
+    nz += player.vz * delta * 0.02;
+  }
+
+  player.x = nx;
+  player.y = ny;
+  player.z = nz;
+
+  if (player.y < 0) {
+    spawnPlayer();
+  }
+}
+
