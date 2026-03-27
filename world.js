@@ -148,7 +148,7 @@ for (let pass = 0; pass < 3; pass++) {
       }
 
       // grottes : on creuse dans la pierre / terre sous un certain niveau
-      for (let y = 10; y < height - 4; y++) {
+      for (let y = 10; y < height - 8; y++) {
         const caveVal = humidNoise.noise(nx * 2.2, (y / 32) * 2.2 + nz * 2.2);
         if (caveVal > 0.65) {
           const b = getBlock(x, y, z);
