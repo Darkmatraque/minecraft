@@ -3,8 +3,7 @@ function buildChunkMesh(cx, cz) {
   const startX = cx * size;
   const startZ = cz * size;
 
-  const group = new THREE.Group(); // un groupe par chunk
-
+  const group = new THREE.Group();
   const cubeGeom = new THREE.BoxGeometry(1, 1, 1);
 
   for (let x = startX; x < startX + size; x++) {
@@ -38,9 +37,7 @@ function buildChunkMesh(cx, cz) {
 
         if (!visible) continue;
 
-        // Matériau basé sur la texture ASCII
         const material = getMaterialForBlock(id);
-
         const cube = new THREE.Mesh(cubeGeom, material);
         cube.position.set(x, y, z);
         group.add(cube);
@@ -51,3 +48,4 @@ function buildChunkMesh(cx, cz) {
   if (group.children.length === 0) return null;
   return group;
 }
+
