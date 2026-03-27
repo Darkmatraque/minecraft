@@ -1,52 +1,42 @@
-// inventory.js — Inventaire Minecraft complet
-
 const INVENTORY = {
-  cols: 9,
-  rows: 3,
-  slots: [], // 27 slots
+  slots: [],
   open: false
 };
 
-// Structure d’un slot : { id: BLOCK.xxx, count: number }
-
 function initInventory() {
-  const total = INVENTORY.cols * INVENTORY.rows;
+  // 9 slots hotbar + 27 slots inventaire = 36
   INVENTORY.slots = [];
-
-  for (let i = 0; i < total; i++) {
+  for (let i = 0; i < 36; i++) {
     INVENTORY.slots.push({ id: BLOCK.AIR, count: 0 });
   }
 
-  // Items de départ (à retirer si tu veux)
-  addItem(BLOCK.STONE, 64);
-  addItem(BLOCK.DIRT, 64);
-  addItem(BLOCK.GRASS, 32);
+  // donner quelques blocs pour tester
+  INVENTORY.slots[0] = { id: BLOCK.STONE, count: 64 };
+  INVENTORY.slots[1] = { id: BLOCK.WOOD, count: 32 };
+  INVENTORY.slots[2] = { id: BLOCK.PLANKS, count: 32 };
 }
 
-function addItem(blockId, amount) {
-  // 1) Stack sur slots existants
+function addItem(id, count) {
+  // stacker d'abord
   for (let slot of INVENTORY.slots) {
-    if (slot.id === blockId && slot.count < 64) {
+    if (slot.id === id && slot.count < 64) {
       const space = 64 - slot.count;
-      const add = Math.min(space, amount);
+      const add = Math.min(space, count);
       slot.count += add;
-      amount -= add;
-      if (amount <= 0) return true;
+      count -= add;
+      if (count <= 0) return;
     }
   }
-
-  // 2) Remplir slots vides
+  // slots vides
   for (let slot of INVENTORY.slots) {
     if (slot.id === BLOCK.AIR) {
-      const add = Math.min(64, amount);
-      slot.id = blockId;
+      const add = Math.min(64, count);
+      slot.id = id;
       slot.count = add;
-      amount -= add;
-      if (amount <= 0) return true;
+      count -= add;
+      if (count <= 0) return;
     }
   }
-
-  return amount <= 0;
 }
 
 function getHotbarBlock(index) {
@@ -57,12 +47,16 @@ function getHotbarBlock(index) {
 
 function consumeHotbar(index) {
   const slot = INVENTORY.slots[index];
-  if (!slot || slot.id === BLOCK.AIR || slot.count <= 0) return false;
-
+  if (!slot || slot.id === BLOCK.AIR) return;
   slot.count--;
   if (slot.count <= 0) {
     slot.id = BLOCK.AIR;
     slot.count = 0;
   }
-  return true;
+}
+
+function toggleInventory() {
+  INVENTORY.open = !INVENTORY.open;
+  const invEl = document.getElementById("inventory");
+  invEl.style.display = INVENTORY.open ? "flex" : "none";
 }
