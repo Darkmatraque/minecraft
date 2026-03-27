@@ -65,30 +65,29 @@ function generateTerrain() {
     }
   }
 
-// --- LISSAGE 5x5 POUR TERRAIN STYLE MINECRAFT ---
-const tmp = new Array(WORLD.WIDTH * WORLD.DEPTH);
+  // --- LISSAGE 5x5 POUR TERRAIN STYLE MINECRAFT ---
+  const tmp = new Array(WORLD.WIDTH * WORLD.DEPTH);
 
-for (let pass = 0; pass < 3; pass++) {
-  for (let x = 2; x < WORLD.WIDTH - 2; x++) {
-    for (let z = 2; z < WORLD.DEPTH - 2; z++) {
+  for (let pass = 0; pass < 3; pass++) {
+    for (let x = 2; x < WORLD.WIDTH - 2; x++) {
+      for (let z = 2; z < WORLD.DEPTH - 2; z++) {
 
-      let sum = 0;
-      for (let dx = -2; dx <= 2; dx++) {
-        for (let dz = -2; dz <= 2; dz++) {
-          sum += heights[(x + dx) + (z + dz) * WORLD.WIDTH];
+        let sum = 0;
+        for (let dx = -2; dx <= 2; dx++) {
+          for (let dz = -2; dz <= 2; dz++) {
+            sum += heights[(x + dx) + (z + dz) * WORLD.WIDTH];
+          }
         }
-      }
 
-      tmp[x + z * WORLD.WIDTH] = Math.round(sum / 25);
+        tmp[x + z * WORLD.WIDTH] = Math.round(sum / 25);
+      }
+    }
+
+    // copie vers heights
+    for (let i = 0; i < heights.length; i++) {
+      if (tmp[i] !== undefined) heights[i] = tmp[i];
     }
   }
-
-  // copie vers heights
-  for (let i = 0; i < heights.length; i++) {
-    if (tmp[i] !== undefined) heights[i] = tmp[i];
-  }
-}
-
 
   const waterLevel = 38;
 
@@ -131,7 +130,7 @@ for (let pass = 0; pass < 3; pass++) {
             if (biome === BIOME.DESERT || biome === BIOME.BEACH) {
               block = BLOCK.SAND;
             } else if (biome === BIOME.SNOW) {
-              block = BLOCK.SNOW; // ou GRASS + SNOW si tu as les deux
+              block = BLOCK.SNOW;
             } else if (biome === BIOME.RIVER && y <= waterLevel + 1) {
               block = BLOCK.SAND;
             } else {
@@ -159,6 +158,41 @@ for (let pass = 0; pass < 3; pass++) {
       }
     }
   }
+}
+
+/* ---------- MINERAIS ---------- */
+
+function generateOres() {
+  function carveVein(blockId, veinCount, veinSize, minY, maxY, noiseScale) {
+    for (let i = 0; i < veinCount; i++) {
+      const cx = Math.floor(Math.random() * WORLD.WIDTH);
+      const cz = Math.floor(Math.random() * WORLD.DEPTH);
+      const cy = minY + Math.floor(Math.random() * (maxY - minY));
+
+      for (let j = 0; j < veinSize; j++) {
+        const ox = cx + Math.floor((Math.random() - 0.5) * 6);
+        const oy = cy + Math.floor((Math.random() - 0.5) * 6);
+        const oz = cz + Math.floor((Math.random() - 0.5) * 6);
+
+        if (!inBounds(ox, oy, oz)) continue;
+
+        const b = getBlock(ox, oy, oz);
+        if (b === BLOCK.STONE) {
+          const n = heightNoise.noise(ox / noiseScale, oz / noiseScale + oy / noiseScale);
+          if (n > 0) {
+            setBlock(ox, oy, oz, blockId);
+          }
+        }
+      }
+    }
+  }
+
+  // Paramètres façon Minecraft (approximatif)
+  carveVein(BLOCK.COAL_ORE,    800, 20,  20,  70, 40);
+  carveVein(BLOCK.IRON_ORE,    500, 12,  10,  60, 35);
+  carveVein(BLOCK.COPPER_ORE,  450, 10,  20,  60, 35);
+  carveVein(BLOCK.GOLD_ORE,    200,  8,   5,  35, 30);
+  carveVein(BLOCK.DIAMOND_ORE, 120,  7,   5,  20, 25);
 }
 
 /* ---------- STRUCTURES : ARBRES + MAISONS ---------- */
@@ -280,6 +314,7 @@ function generateStructures() {
 function initWorld() {
   worldBlocks = new Uint8Array(WORLD.WIDTH * WORLD.HEIGHT * WORLD.DEPTH);
   generateTerrain();
+  generateOres();       // minerais
   generateStructures();
 }
 
@@ -296,4 +331,3 @@ function rebuildChunkAt(x, z) {
   }
   ensureChunk(cx, cz);
 }
-
