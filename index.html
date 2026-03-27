@@ -4,38 +4,63 @@
   <meta charset="UTF-8">
   <title>Mini Minecraft 3D – Web</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Style global -->
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <div id="ui">
-    <div id="crosshair">+</div>
-    <div id="hint">Clique dans la fenêtre puis clic gauche pour capturer la souris.</div>
 
+<body>
+
+  <!-- ============================
+       UI PRINCIPALE
+       ============================ -->
+  <div id="ui">
+
+    <!-- Viseur -->
+    <div id="crosshair">+</div>
+
+    <!-- Message de capture souris -->
+    <div id="hint">
+      Clique dans la fenêtre puis clic gauche pour capturer la souris.
+    </div>
+
+    <!-- Infos joueur -->
     <div id="info">
       <span id="biome-label">Biome: --</span>
       <span id="pos-label">X: 0 Y: 0 Z: 0</span>
     </div>
 
-    <!-- Barre du bas -->
+    <!-- Hotbar -->
     <div id="hotbar-container">
       <div id="hotbar"></div>
     </div>
+
   </div>
 
-  <!-- Inventaire -->
+  <!-- ============================
+       INVENTAIRE
+       ============================ -->
   <div id="inventory" style="display:none;">
     <div id="inventory-grid"></div>
   </div>
 
+  <!-- ============================
+       CANVAS DU JEU
+       ============================ -->
   <canvas id="game-canvas"></canvas>
 
-  <!-- Libs -->
+  <!-- ============================
+       LIBRAIRIES
+       ============================ -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.146.0/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.146.0/examples/js/controls/PointerLockControls.js"></script>
 
-  <!-- Core -->
+  <!-- ============================
+       COEUR DU JEU
+       ============================ -->
   <script src="noise.js"></script>
   <script src="blocks.js"></script>
+  <script src="textures.js"></script> <!-- IMPORTANT : après blocks.js -->
   <script src="biomes.js"></script>
   <script src="world.js"></script>
   <script src="player.js"></script>
@@ -44,8 +69,29 @@
   <script src="inventory.js"></script>
   <script src="inventory_ui.js"></script>
 
-  <!-- Moteur principal -->
+  <!-- Mobs -->
+  <script src="mobs.js"></script>
+
+  <!-- Combat -->
+  <script src="combat.js"></script>
+
+  <!-- Minage -->
+  <script src="mining.js"></script>
+
+  <!-- Structures avancées -->
+  <script src="structures_advanced.js"></script>
+
+  <!-- Lumière -->
+  <script src="lighting.js"></script>
+
+  <!-- Fluides -->
+  <script src="fluids.js"></script>
+
+  <!-- ============================
+       MOTEUR PRINCIPAL
+       ============================ -->
   <script src="main.js"></script>
+
 </body>
 </html>
 
