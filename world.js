@@ -43,9 +43,11 @@ function generateTerrain() {
       const hBase = heightNoise.noise(nx * 1.5, nz * 1.5);
       const hDetail = heightNoise.noise(nx * 4.0, nz * 4.0) * 0.25;
 
-      // Terrain un peu plus haut et plus naturel
-      let height = Math.floor(25 + (hBase * 0.7 + hDetail * 0.3) * 18);
-      if (height < 4) height = 4;
+      // Terrain plus haut + plus lisse
+      let height = Math.floor(35 + (hBase * 0.7 + hDetail * 0.3) * 25);
+
+      // Empêche les zones trop basses (cause des trous)
+      height = Math.max(height, 15);
 
       const temp = tempNoise.noise(nx * 0.8, nz * 0.8);
       const humid = humidNoise.noise(nx * 0.8, nz * 0.8);
@@ -56,8 +58,8 @@ function generateTerrain() {
         if (y > height) {
           setBlock(x, y, z, BLOCK.AIR);
         } else if (y === height) {
-          if (biome === BIOME.DESERT) setBlock(x, y, z, BLOCK.SAND);
-          else setBlock(x, y, z, BLOCK.GRASS);
+          // Pour l’instant : herbe partout (terrain propre)
+          setBlock(x, y, z, BLOCK.GRASS);
         } else if (y > height - 3) {
           setBlock(x, y, z, BLOCK.DIRT);
         } else {
