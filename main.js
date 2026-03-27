@@ -1,3 +1,7 @@
+// ============================
+//  CONSTANTES & ÉTAT GLOBAL
+// ============================
+
 let renderer, scene, camera, controls;
 let canvas;
 let clock;
@@ -9,11 +13,20 @@ const CHUNK = {
   SIZE: WORLD.CHUNK_SIZE
 };
 
+const VIEW_RANGE = 2; // distance de chunks visibles (2 = 25 chunks)
+const BLOCK_DIRS = [
+  [1, 0, 0], [-1, 0, 0],
+  [0, 1, 0], [0, -1, 0],
+  [0, 0, 1], [0, 0, -1]
+];
+
 let keys = {};
 let pointerLocked = false;
 let hotbarEl, biomeLabelEl, posLabelEl, hintEl;
 
-/* ===== TEXTURES ASCII ===== */
+// ============================
+//  TEXTURES ASCII
+// ============================
 
 const materialCache = new Map();
 
@@ -38,7 +51,9 @@ function getMaterialForBlock(blockId) {
   return mat;
 }
 
-/* ===== CHUNKS & RENDU ===== */
+// ============================
+//  CHUNKS & RENDU
+// ============================
 
 function chunkKey(cx, cz) {
   return `${cx},${cz}`;
@@ -64,13 +79,8 @@ function buildChunkMesh(cx, cz) {
 
         // Vérifie si un côté est visible
         let visible = false;
-        const dirs = [
-          [1,0,0], [-1,0,0],
-          [0,1,0], [0,-1,0],
-          [0,0,1], [0,0,-1]
-        ];
 
-        for (const [dx, dy, dz] of dirs) {
+        for (const [dx, dy, dz] of BLOCK_DIRS) {
           const nx = x + dx;
           const ny = y + dy;
           const nz = z + dz;
@@ -107,14 +117,13 @@ function ensureChunk(cx, cz) {
 }
 
 function updateVisibleChunks() {
-  const range = 3;
   const cx = Math.floor(player.x / CHUNK.SIZE);
   const cz = Math.floor(player.z / CHUNK.SIZE);
 
   const needed = new Set();
 
-  for (let dx = -range; dx <= range; dx++) {
-    for (let dz = -range; dz <= range; dz++) {
+  for (let dx = -VIEW_RANGE; dx <= VIEW_RANGE; dx++) {
+    for (let dz = -VIEW_RANGE; dz <= VIEW_RANGE; dz++) {
       const ncx = cx + dx;
       const ncz = cz + dz;
       if (ncx < 0 || ncz < 0) continue;
@@ -145,7 +154,9 @@ function rebuildChunkAt(x, z) {
   ensureChunk(cx, cz);
 }
 
-/* ===== RAYCAST ===== */
+// ============================
+//  RAYCAST
+// ============================
 
 function getLookRay() {
   const dir = new THREE.Vector3();
@@ -182,7 +193,9 @@ function raycastBlock(maxDist = 6) {
   return { hit: false };
 }
 
-/* ===== CONTROLES & INVENTAIRE ===== */
+// ============================
+//  CONTROLES & INVENTAIRE
+// ============================
 
 function initControls() {
   document.addEventListener("keydown", (e) => {
@@ -244,7 +257,9 @@ function initControls() {
   document.addEventListener("contextmenu", (e) => e.preventDefault());
 }
 
-/* ===== MINAGE & PLACEMENT ===== */
+// ============================
+//  MINAGE & PLACEMENT
+// ============================
 
 function mineBlock() {
   const hit = raycastBlock();
@@ -292,7 +307,9 @@ function placeBlock() {
   refreshInventoryUI();
 }
 
-/* ===== UI HOTBAR & INFO ===== */
+// ============================
+//  UI HOTBAR & INFO
+// ============================
 
 function updateHotbarUI() {
   hotbarEl.innerHTML = "";
@@ -329,14 +346,16 @@ function updateInfoUI() {
     " Z: " + player.z.toFixed(1);
 }
 
-/* ===== SCÈNE & GAME LOOP ===== */
+// ============================
+//  SCÈNE & GAME LOOP
+// ============================
 
 function initScene() {
   canvas = document.getElementById("game-canvas");
-  renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: false });
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.shadowMap.enabled = true;
+  renderer.setPixelRatio(1);
+  renderer.shadowMap.enabled = false;
 
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x87ceeb);
@@ -352,7 +371,6 @@ function initScene() {
 
   const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
   dirLight.position.set(50, 100, 50);
-  dirLight.castShadow = true;
   scene.add(dirLight);
 
   clock = new THREE.Clock();
@@ -426,7 +444,9 @@ function gameLoop() {
   renderer.render(scene, camera);
 }
 
-/* ===== UI INIT & MAIN ===== */
+// ============================
+//  UI INIT & MAIN
+// ============================
 
 function initUI() {
   hotbarEl = document.getElementById("hotbar");
@@ -452,4 +472,3 @@ function main() {
 }
 
 document.addEventListener("DOMContentLoaded", main);
-
