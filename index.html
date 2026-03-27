@@ -10,16 +10,19 @@
   <div id="ui">
     <div id="crosshair">+</div>
     <div id="hint">Clique dans la fenêtre puis appuie sur clic gauche pour capturer la souris.</div>
+
     <div id="info">
       <span id="biome-label">Biome: --</span>
       <span id="pos-label">X: 0 Y: 0 Z: 0</span>
     </div>
 
-    <!-- Hotbar -->
-    <div id="hotbar"></div>
+    <!-- BARRE DU BAS (Minecraft) -->
+    <div id="hotbar-container">
+      <div id="hotbar"></div>
+    </div>
   </div>
 
-  <!-- Fenêtre d'inventaire (nouveau) -->
+  <!-- Fenêtre d'inventaire -->
   <div id="inventory" style="display:none;">
     <div id="inventory-grid"></div>
   </div>
@@ -41,6 +44,7 @@
   <script src="inventory.js"></script>
   <script src="inventory_ui.js"></script>
 
+  <!-- Moteur principal -->
   <script src="main.js"></script>
 </body>
 </html>
