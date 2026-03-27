@@ -42,7 +42,9 @@ function generateTerrain() {
 
       const hBase = heightNoise.noise(nx * 1.5, nz * 1.5);
       const hDetail = heightNoise.noise(nx * 4.0, nz * 4.0) * 0.25;
-      let height = Math.floor(20 + (hBase * 0.7 + hDetail * 0.3) * 12);
+
+      // Terrain un peu plus haut et plus naturel
+      let height = Math.floor(25 + (hBase * 0.7 + hDetail * 0.3) * 18);
       if (height < 4) height = 4;
 
       const temp = tempNoise.noise(nx * 0.8, nz * 0.8);
@@ -83,11 +85,15 @@ function placeTree(x, z) {
     for (let dy = -1; dy <= 2; dy++) {
       for (let dz = -2; dz <= 2; dz++) {
         if (Math.abs(dx) + Math.abs(dy) + Math.abs(dz) > 4) continue;
+
         const bx = x + dx;
         const by = topY + dy;
         const bz = z + dz;
+
         if (!inBounds(bx, by, bz)) continue;
-        if (getBlock(bx, by, bz) === BLOCK.AIR) {
+
+        // FIX : empêcher les feuilles de creuser le sol
+        if (by > y && getBlock(bx, by, bz) === BLOCK.AIR) {
           setBlock(bx, by, bz, BLOCK.LEAVES);
         }
       }
@@ -114,6 +120,7 @@ function placeHouse(x, z) {
       if (isEdge) {
         for (let dy = 1; dy <= h; dy++) {
           const yy = baseY + dy;
+
           // porte
           if (dz === Math.floor(d / 2) && dx === 0 && (dy === 1 || dy === 2)) {
             setBlock(bx, yy, bz, BLOCK.AIR);
@@ -136,7 +143,7 @@ function placeHouse(x, z) {
     }
   }
 
-  // fenêtres
+  // fenêtre
   const wy = baseY + 2;
   if (inBounds(x + Math.floor(w / 2), wy, z)) {
     setBlock(x + Math.floor(w / 2), wy, z, BLOCK.GLASS);
