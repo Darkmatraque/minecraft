@@ -3,22 +3,28 @@
 // ============================
 
 const WORLD = {
-  WIDTH: 256,      // avant 1024
-  DEPTH: 256,      // avant 1024
+  WIDTH: 256,
+  DEPTH: 256,
   HEIGHT: 80,
   CHUNK_SIZE: 16
 };
 
 let worldBlocks = new Uint8Array(WORLD.WIDTH * WORLD.HEIGHT * WORLD.DEPTH);
 
+// ============================
+//  ACCÈS BLOCS
+// ============================
+
 function indexFromXYZ(x, y, z) {
   return x + z * WORLD.WIDTH + y * WORLD.WIDTH * WORLD.DEPTH;
 }
 
 function inBounds(x, y, z) {
-  return x >= 0 && x < WORLD.WIDTH &&
-         z >= 0 && z < WORLD.DEPTH &&
-         y >= 0 && y < WORLD.HEIGHT;
+  return (
+    x >= 0 && x < WORLD.WIDTH &&
+    z >= 0 && z < WORLD.DEPTH &&
+    y >= 0 && y < WORLD.HEIGHT
+  );
 }
 
 function getBlock(x, y, z) {
@@ -31,9 +37,15 @@ function setBlock(x, y, z, id) {
   worldBlocks[indexFromXYZ(x, y, z)] = id;
 }
 
+// ============================
+//  HAUTEUR SURFACE
+// ============================
+
 function getSurfaceHeightAt(x, z) {
   for (let y = WORLD.HEIGHT - 1; y >= 0; y--) {
-    if (getBlock(x, y, z) !== BLOCK.AIR) return y;
+    if (getBlock(x, y, z) !== BLOCK.AIR) {
+      return y;
+    }
   }
   return 0;
 }
@@ -45,9 +57,10 @@ function getSurfaceHeightAt(x, z) {
 function generateTerrain() {
   const heights = new Array(WORLD.WIDTH * WORLD.DEPTH);
 
-  // 1) hauteur brute
+  // --- Étape 1 : hauteur brute ---
   for (let x = 0; x < WORLD.WIDTH; x++) {
     for (let z = 0; z < WORLD.DEPTH; z++) {
+
       const nx = x / 256;
       const nz = z / 256;
 
@@ -57,6 +70,7 @@ function generateTerrain() {
       const hMount     = heightNoise.noise(nx * 0.2, nz * 0.2);
 
       let base = 40 + hContinent * 12;
+
       let height =
         base +
         hBase * 8 +
@@ -64,6 +78,7 @@ function generateTerrain() {
         Math.max(0, hMount) * 18;
 
       height = Math.floor(height);
+
       if (height < 20) height = 20;
       if (height > WORLD.HEIGHT - 8) height = WORLD.HEIGHT - 8;
 
@@ -71,7 +86,7 @@ function generateTerrain() {
     }
   }
 
-  // 2) lissage
+  // --- Étape 2 : lissage ---
   const tmp = new Array(WORLD.WIDTH * WORLD.DEPTH);
 
   for (let pass = 0; pass < 3; pass++) {
@@ -79,6 +94,7 @@ function generateTerrain() {
       for (let z = 2; z < WORLD.DEPTH - 2; z++) {
 
         let sum = 0;
+
         for (let dx = -2; dx <= 2; dx++) {
           for (let dz = -2; dz <= 2; dz++) {
             sum += heights[(x + dx) + (z + dz) * WORLD.WIDTH];
@@ -96,9 +112,10 @@ function generateTerrain() {
 
   const waterLevel = 38;
 
-  // 3) blocs + biomes + rivières + grottes
+  // --- Étape 3 : blocs + biomes ---
   for (let x = 0; x < WORLD.WIDTH; x++) {
     for (let z = 0; z < WORLD.DEPTH; z++) {
+
       const nx = x / 256;
       const nz = z / 256;
 
@@ -108,6 +125,7 @@ function generateTerrain() {
       const temp  = tempNoise.noise(nx * 0.6, nz * 0.6);
       const humid = humidNoise.noise(nx * 0.6, nz * 0.6);
       const heightNorm = (height - 20) / (WORLD.HEIGHT - 24);
+
       const biome = getBiomeAt(temp, humid, heightNorm);
 
       const riverVal = tempNoise.noise(nx * 1.2, nz * 1.2);
@@ -119,16 +137,19 @@ function generateTerrain() {
       }
 
       for (let y = 0; y < WORLD.HEIGHT; y++) {
+
         let block = BLOCK.AIR;
 
         if (y > height) {
+
           if (isRiver && y <= waterLevel) {
             block = BLOCK.WATER;
-          } else {
-            block = BLOCK.AIR;
           }
+
         } else {
+
           if (y === height) {
+
             if (biome === BIOME.DESERT || biome === BIOME.BEACH) {
               block = BLOCK.SAND;
             } else if (biome === BIOME.SNOW) {
@@ -138,6 +159,7 @@ function generateTerrain() {
             } else {
               block = BLOCK.GRASS;
             }
+
           } else if (y >= height - 3) {
             block = BLOCK.DIRT;
           } else {
@@ -148,9 +170,12 @@ function generateTerrain() {
         setBlock(x, y, z, block);
       }
 
-      // grottes
+      // --- grottes ---
       for (let y = 10; y < height - 8; y++) {
-        const caveVal = humidNoise.noise(nx * 2.2, (y / 32) * 2.2 + nz * 2.2);
+
+        const caveVal =
+          humidNoise.noise(nx * 2.2, (y / 32) * 2.2 + nz * 2.2);
+
         if (caveVal > 0.65) {
           const b = getBlock(x, y, z);
           if (b === BLOCK.STONE || b === BLOCK.DIRT) {
@@ -167,13 +192,17 @@ function generateTerrain() {
 // ============================
 
 function generateOres() {
+
   function carveVein(blockId, veinCount, veinSize, minY, maxY, noiseScale) {
+
     for (let i = 0; i < veinCount; i++) {
+
       const cx = Math.floor(Math.random() * WORLD.WIDTH);
       const cz = Math.floor(Math.random() * WORLD.DEPTH);
       const cy = minY + Math.floor(Math.random() * (maxY - minY));
 
       for (let j = 0; j < veinSize; j++) {
+
         const ox = cx + Math.floor((Math.random() - 0.5) * 6);
         const oy = cy + Math.floor((Math.random() - 0.5) * 6);
         const oz = cz + Math.floor((Math.random() - 0.5) * 6);
@@ -181,8 +210,15 @@ function generateOres() {
         if (!inBounds(ox, oy, oz)) continue;
 
         const b = getBlock(ox, oy, oz);
+
         if (b === BLOCK.STONE) {
-          const n = heightNoise.noise(ox / noiseScale, oz / noiseScale + oy / noiseScale);
+
+          const n =
+            heightNoise.noise(
+              ox / noiseScale,
+              oz / noiseScale + oy / noiseScale
+            );
+
           if (n > 0) {
             setBlock(ox, oy, oz, blockId);
           }
@@ -191,12 +227,11 @@ function generateOres() {
     }
   }
 
-  // moins de veines, monde plus petit
-  carveVein(BLOCK.COAL_ORE,    200, 18,  20,  70, 40);
-  carveVein(BLOCK.IRON_ORE,    140, 12,  10,  60, 35);
-  carveVein(BLOCK.COPPER_ORE,  120, 10,  20,  60, 35);
-  carveVein(BLOCK.GOLD_ORE,     60,  8,   5,  35, 30);
-  carveVein(BLOCK.DIAMOND_ORE,  40,  7,   5,  20, 25);
+  carveVein(BLOCK.COAL_ORE,    200, 18, 20, 70, 40);
+  carveVein(BLOCK.IRON_ORE,    140, 12, 10, 60, 35);
+  carveVein(BLOCK.COPPER_ORE,  120, 10, 20, 60, 35);
+  carveVein(BLOCK.GOLD_ORE,     60,  8,  5, 35, 30);
+  carveVein(BLOCK.DIAMOND_ORE,  40,  7,  5, 20, 25);
 }
 
 // ============================
@@ -204,21 +239,24 @@ function generateOres() {
 // ============================
 
 function placeTree(x, z) {
+
   const y = getSurfaceHeightAt(x, z);
   if (y <= 0 || y >= WORLD.HEIGHT - 6) return;
 
-  const ground = getBlock(x, y, z);
-  if (ground !== BLOCK.GRASS) return;
+  if (getBlock(x, y, z) !== BLOCK.GRASS) return;
 
   const trunkHeight = 4 + Math.floor(Math.random() * 2);
+
   for (let i = 1; i <= trunkHeight; i++) {
     setBlock(x, y + i, z, BLOCK.WOOD);
   }
+
   const topY = y + trunkHeight;
 
   for (let dx = -2; dx <= 2; dx++) {
     for (let dy = -2; dy <= 2; dy++) {
       for (let dz = -2; dz <= 2; dz++) {
+
         if (Math.abs(dx) + Math.abs(dy) + Math.abs(dz) > 4) continue;
 
         const bx = x + dx;
@@ -237,9 +275,11 @@ function placeTree(x, z) {
 }
 
 function placeHouse(x, z) {
+
   const baseY = getSurfaceHeightAt(x, z);
   const w = 7, d = 7, h = 4;
 
+  // terrain plat
   for (let dx = 0; dx < w; dx++) {
     for (let dz = 0; dz < d; dz++) {
       const yy = getSurfaceHeightAt(x + dx, z + dz);
@@ -247,25 +287,25 @@ function placeHouse(x, z) {
     }
   }
 
+  // plancher
   for (let dx = 0; dx < w; dx++) {
     for (let dz = 0; dz < d; dz++) {
-      const bx = x + dx;
-      const bz = z + dz;
-      if (!inBounds(bx, baseY, bz)) continue;
-      setBlock(bx, baseY, bz, BLOCK.PLANKS);
+      setBlock(x + dx, baseY, z + dz, BLOCK.PLANKS);
     }
   }
 
+  // murs
   for (let dx = 0; dx < w; dx++) {
     for (let dz = 0; dz < d; dz++) {
+
       const isEdge = dx === 0 || dx === w - 1 || dz === 0 || dz === d - 1;
       if (!isEdge) continue;
 
       for (let dy = 1; dy <= h; dy++) {
+
         const bx = x + dx;
         const bz = z + dz;
         const yy = baseY + dy;
-        if (!inBounds(bx, yy, bz)) continue;
 
         if (dz === Math.floor(d / 2) && dx === 0 && (dy === 1 || dy === 2)) {
           setBlock(bx, yy, bz, BLOCK.AIR);
@@ -276,26 +316,22 @@ function placeHouse(x, z) {
     }
   }
 
+  // toit
   for (let dx = -1; dx <= w; dx++) {
     for (let dz = -1; dz <= d; dz++) {
-      const bx = x + dx;
-      const bz = z + dz;
-      const yy = baseY + h + 1;
-      if (!inBounds(bx, yy, bz)) continue;
-      setBlock(bx, yy, bz, BLOCK.WOOD);
+      setBlock(x + dx, baseY + h + 1, z + dz, BLOCK.WOOD);
     }
   }
 
+  // fenêtre
   const wy = baseY + 2;
   const wx = x + Math.floor(w / 2);
   const wz = z + d - 1;
-  if (inBounds(wx, wy, wz)) {
-    setBlock(wx, wy, wz, BLOCK.GLASS);
-  }
+  setBlock(wx, wy, wz, BLOCK.GLASS);
 }
 
 function generateStructures() {
-  // moins d’arbres, monde plus petit
+
   for (let i = 0; i < 400; i++) {
     const x = Math.floor(Math.random() * WORLD.WIDTH);
     const z = Math.floor(Math.random() * WORLD.DEPTH);
