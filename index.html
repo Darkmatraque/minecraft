@@ -9,31 +9,31 @@
 <body>
   <div id="ui">
     <div id="crosshair">+</div>
-    <div id="hint">Clique dans la fenêtre puis appuie sur clic gauche pour capturer la souris.</div>
+    <div id="hint">Clique dans la fenêtre puis clic gauche pour capturer la souris.</div>
 
     <div id="info">
       <span id="biome-label">Biome: --</span>
       <span id="pos-label">X: 0 Y: 0 Z: 0</span>
     </div>
 
-    <!-- BARRE DU BAS (Minecraft) -->
+    <!-- Barre du bas -->
     <div id="hotbar-container">
       <div id="hotbar"></div>
     </div>
   </div>
 
-  <!-- Fenêtre d'inventaire -->
+  <!-- Inventaire -->
   <div id="inventory" style="display:none;">
     <div id="inventory-grid"></div>
   </div>
 
   <canvas id="game-canvas"></canvas>
 
-  <!-- Three.js + PointerLockControls -->
+  <!-- Libs -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.146.0/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.146.0/examples/js/controls/PointerLockControls.js"></script>
 
-  <!-- Tes scripts -->
+  <!-- Core -->
   <script src="noise.js"></script>
   <script src="blocks.js"></script>
   <script src="biomes.js"></script>
@@ -48,3 +48,4 @@
   <script src="main.js"></script>
 </body>
 </html>
+
