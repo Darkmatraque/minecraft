@@ -1,14 +1,12 @@
 // ============================
-//  JOUEUR & PHYSIQUE
+//  JOUEUR & PHYSIQUE (VERSION SIMPLE)
 // ============================
 
 const PLAYER = {
-  radius: 0.4,
-  height: 1.8,
-  eyeHeight: 1.6,
   speed: 6,
   jumpSpeed: 8,
-  gravity: -25
+  gravity: -25,
+  eyeHeight: 1.6
 };
 
 let player = {
@@ -36,8 +34,11 @@ function spawnPlayer() {
   player.onGround = false;
 }
 
-function isSolidBlockAt(x, y, z) {
-  const id = getBlock(Math.floor(x), Math.floor(y), Math.floor(z));
+function isSolidAtXYZ(x, y, z) {
+  const bx = Math.floor(x);
+  const by = Math.floor(y);
+  const bz = Math.floor(z);
+  const id = getBlock(bx, by, bz);
   const def = BLOCK_DEFS[id];
   return def && def.solid;
 }
@@ -70,56 +71,41 @@ function movePlayer(delta, dirVec) {
   let ny = player.y + player.vy * delta;
   let nz = player.z + player.vz * delta;
 
-  const r = PLAYER.radius;
-  const h = PLAYER.height;
+  // --- collision Y (sol / plafond) ---
+  player.onGround = false;
+
+  // on regarde le bloc sous les pieds
+  if (player.vy <= 0) {
+    const nextFeetY = ny;
+    if (isSolidAtXYZ(nx, nextFeetY - 0.1, nz)) {
+      // on pose le joueur juste au-dessus du bloc
+      ny = Math.floor(nextFeetY) + 0.001;
+      player.vy = 0;
+      player.onGround = true;
+    }
+  } else {
+    // vers le haut : bloc au-dessus de la tête
+    if (isSolidAtXYZ(nx, ny + 1.7, nz)) {
+      player.vy = 0;
+    }
+  }
 
   // --- collision X ---
-  if (
-    isSolidBlockAt(nx + r, player.y, player.z) ||
-    isSolidBlockAt(nx - r, player.y, player.z) ||
-    isSolidBlockAt(nx + r, player.y + h * 0.5, player.z) ||
-    isSolidBlockAt(nx - r, player.y + h * 0.5, player.z)
-  ) {
+  const testX = nx;
+  if (isSolidAtXYZ(testX, ny, nz) || isSolidAtXYZ(testX, ny + 0.9, nz)) {
     nx = player.x;
     player.vx = 0;
   }
 
   // --- collision Z ---
-  if (
-    isSolidBlockAt(player.x, player.y, nz + r) ||
-    isSolidBlockAt(player.x, player.y, nz - r) ||
-    isSolidBlockAt(player.x, player.y + h * 0.5, nz + r) ||
-    isSolidBlockAt(player.x, player.y + h * 0.5, nz - r)
-  ) {
+  const testZ = nz;
+  if (isSolidAtXYZ(nx, ny, testZ) || isSolidAtXYZ(nx, ny + 0.9, testZ)) {
     nz = player.z;
     player.vz = 0;
-  }
-
-  // --- collision Y ---
-  player.onGround = false;
-
-  if (player.vy > 0) {
-    // monte → plafond
-    if (
-      isSolidBlockAt(nx, ny + h, nz) ||
-      isSolidBlockAt(nx, ny + h * 0.9, nz)
-    ) {
-      ny = Math.floor(ny + h) - h;
-      player.vy = 0;
-    }
-  } else {
-    // descend → sol
-    if (
-      isSolidBlockAt(nx, ny, nz) ||
-      isSolidBlockAt(nx, ny + 0.05, nz)
-    ) {
-      ny = Math.floor(ny) + 0.001;
-      player.vy = 0;
-      player.onGround = true;
-    }
   }
 
   player.x = nx;
   player.y = ny;
   player.z = nz;
 }
+
