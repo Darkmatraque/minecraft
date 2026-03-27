@@ -1,284 +1,120 @@
-/* ============================================================
-   BLOCS AVANCÉS — STYLE MINECRAFT
-   ============================================================ */
+// ============================
+//  BLOCS & DÉFINITIONS
+// ============================
 
 const BLOCK = {
   AIR: 0,
   GRASS: 1,
   DIRT: 2,
   STONE: 3,
-  COBBLESTONE: 4,
-
-  SAND: 5,
-  GRAVEL: 6,
-
-  LOG: 7,
-  PLANKS: 8,
-  LEAVES: 9,
-
+  SAND: 4,
+  SNOW: 5,
+  WATER: 6,
+  WOOD: 7,
+  LEAVES: 8,
+  PLANKS: 9,
   GLASS: 10,
-  TORCH: 11,
-
-  CHEST: 12,
-  DOOR_BOTTOM: 13,
-  DOOR_TOP: 14,
-
-  WATER: 15,
-  LAVA: 16,
-
-  COAL_ORE: 17,
-  IRON_ORE: 18,
-  COPPER_ORE: 19,
-  GOLD_ORE: 20,
-  DIAMOND_ORE: 21,
-
-  GLOWSTONE: 22
+  COAL_ORE: 11,
+  IRON_ORE: 12,
+  COPPER_ORE: 13,
+  GOLD_ORE: 14,
+  DIAMOND_ORE: 15
 };
 
-/* ============================================================
-   PROPRIÉTÉS DES BLOCS
-   ============================================================ */
-
 const BLOCK_DEFS = {
-
-  /* ----- AIR ----- */
   [BLOCK.AIR]: {
-    solid: false,
-    transparent: true,
-    drops: BLOCK.AIR,
-    hardness: 0,
-    gravity: false,
-    light: 0,
-    interact: null
+    id: BLOCK.AIR,
+    name: "Air",
+    solid: false
   },
-
-  /* ----- BLOCS DE BASE ----- */
   [BLOCK.GRASS]: {
+    id: BLOCK.GRASS,
+    name: "Grass",
     solid: true,
-    transparent: false,
-    drops: BLOCK.DIRT,
-    hardness: 0.6,
-    gravity: false,
-    light: 0,
-    interact: null
+    texture: "grass"
   },
-
   [BLOCK.DIRT]: {
+    id: BLOCK.DIRT,
+    name: "Dirt",
     solid: true,
-    transparent: false,
-    drops: BLOCK.DIRT,
-    hardness: 0.5,
-    gravity: false,
-    light: 0,
-    interact: null
+    texture: "dirt"
   },
-
   [BLOCK.STONE]: {
+    id: BLOCK.STONE,
+    name: "Stone",
     solid: true,
-    transparent: false,
-    drops: BLOCK.COBBLESTONE,
-    hardness: 1.5,
-    gravity: false,
-    light: 0,
-    interact: null
+    texture: "stone"
   },
-
-  [BLOCK.COBBLESTONE]: {
-    solid: true,
-    transparent: false,
-    drops: BLOCK.COBBLESTONE,
-    hardness: 1.5,
-    gravity: false,
-    light: 0,
-    interact: null
-  },
-
-  /* ----- BLOCS GRAVITATIONNELS ----- */
   [BLOCK.SAND]: {
+    id: BLOCK.SAND,
+    name: "Sand",
     solid: true,
-    transparent: false,
-    drops: BLOCK.SAND,
-    hardness: 0.5,
-    gravity: true,
-    light: 0,
-    interact: null
+    texture: "sand"
   },
-
-  [BLOCK.GRAVEL]: {
+  [BLOCK.SNOW]: {
+    id: BLOCK.SNOW,
+    name: "Snow",
     solid: true,
-    transparent: false,
-    drops: BLOCK.GRAVEL,
-    hardness: 0.6,
-    gravity: true,
-    light: 0,
-    interact: null
+    texture: "snow"
   },
-
-  /* ----- BOIS ----- */
-  [BLOCK.LOG]: {
-    solid: true,
-    transparent: false,
-    drops: BLOCK.LOG,
-    hardness: 1.0,
-    gravity: false,
-    light: 0,
-    interact: null
-  },
-
-  [BLOCK.PLANKS]: {
-    solid: true,
-    transparent: false,
-    drops: BLOCK.PLANKS,
-    hardness: 0.8,
-    gravity: false,
-    light: 0,
-    interact: null
-  },
-
-  [BLOCK.LEAVES]: {
-    solid: true,
-    transparent: true,
-    drops: BLOCK.AIR,
-    hardness: 0.2,
-    gravity: false,
-    light: 0,
-    interact: null
-  },
-
-  /* ----- VERRE ----- */
-  [BLOCK.GLASS]: {
-    solid: true,
-    transparent: true,
-    drops: BLOCK.AIR,
-    hardness: 0.3,
-    gravity: false,
-    light: 0,
-    interact: null
-  },
-
-  /* ----- TORCHE (LUMIÈRE) ----- */
-  [BLOCK.TORCH]: {
-    solid: false,
-    transparent: true,
-    drops: BLOCK.TORCH,
-    hardness: 0,
-    gravity: false,
-    light: 14,
-    interact: null
-  },
-
-  /* ----- COFFRE (INTERACTIF) ----- */
-  [BLOCK.CHEST]: {
-    solid: true,
-    transparent: false,
-    drops: BLOCK.CHEST,
-    hardness: 2.5,
-    gravity: false,
-    light: 0,
-    interact: "openChest" // fonction que tu ajouteras plus tard
-  },
-
-  /* ----- PORTE (2 BLOCS) ----- */
-  [BLOCK.DOOR_BOTTOM]: {
-    solid: true,
-    transparent: true,
-    drops: BLOCK.DOOR_BOTTOM,
-    hardness: 1.5,
-    gravity: false,
-    light: 0,
-    interact: "toggleDoor"
-  },
-
-  [BLOCK.DOOR_TOP]: {
-    solid: true,
-    transparent: true,
-    drops: BLOCK.DOOR_BOTTOM,
-    hardness: 1.5,
-    gravity: false,
-    light: 0,
-    interact: "toggleDoor"
-  },
-
-  /* ----- FLUIDES ----- */
   [BLOCK.WATER]: {
+    id: BLOCK.WATER,
+    name: "Water",
     solid: false,
-    transparent: true,
-    drops: BLOCK.AIR,
-    hardness: 0,
-    gravity: false,
-    light: 0,
-    interact: null
+    texture: "water"
   },
-
-  [BLOCK.LAVA]: {
+  [BLOCK.WOOD]: {
+    id: BLOCK.WOOD,
+    name: "Wood",
+    solid: true,
+    texture: "wood"
+  },
+  [BLOCK.LEAVES]: {
+    id: BLOCK.LEAVES,
+    name: "Leaves",
     solid: false,
-    transparent: true,
-    drops: BLOCK.AIR,
-    hardness: 0,
-    gravity: false,
-    light: 15,
-    interact: null
+    texture: "leaves"
   },
-
-  /* ----- MINERAIS ----- */
+  [BLOCK.PLANKS]: {
+    id: BLOCK.PLANKS,
+    name: "Planks",
+    solid: true,
+    texture: "planks"
+  },
+  [BLOCK.GLASS]: {
+    id: BLOCK.GLASS,
+    name: "Glass",
+    solid: false,
+    texture: "glass"
+  },
   [BLOCK.COAL_ORE]: {
+    id: BLOCK.COAL_ORE,
+    name: "Coal Ore",
     solid: true,
-    transparent: false,
-    drops: BLOCK.COAL_ORE,
-    hardness: 1.0,
-    gravity: false,
-    light: 0,
-    interact: null
+    texture: "coal_ore"
   },
-
   [BLOCK.IRON_ORE]: {
+    id: BLOCK.IRON_ORE,
+    name: "Iron Ore",
     solid: true,
-    transparent: false,
-    drops: BLOCK.IRON_ORE,
-    hardness: 1.2,
-    gravity: false,
-    light: 0,
-    interact: null
+    texture: "iron_ore"
   },
-
   [BLOCK.COPPER_ORE]: {
+    id: BLOCK.COPPER_ORE,
+    name: "Copper Ore",
     solid: true,
-    transparent: false,
-    drops: BLOCK.COPPER_ORE,
-    hardness: 1.1,
-    gravity: false,
-    light: 0,
-    interact: null
+    texture: "copper_ore"
   },
-
   [BLOCK.GOLD_ORE]: {
+    id: BLOCK.GOLD_ORE,
+    name: "Gold Ore",
     solid: true,
-    transparent: false,
-    drops: BLOCK.GOLD_ORE,
-    hardness: 1.3,
-    gravity: false,
-    light: 0,
-    interact: null
+    texture: "gold_ore"
   },
-
   [BLOCK.DIAMOND_ORE]: {
+    id: BLOCK.DIAMOND_ORE,
+    name: "Diamond Ore",
     solid: true,
-    transparent: false,
-    drops: BLOCK.DIAMOND_ORE,
-    hardness: 1.5,
-    gravity: false,
-    light: 0,
-    interact: null
-  },
-
-  /* ----- GLOWSTONE (LUMIÈRE FORTE) ----- */
-  [BLOCK.GLOWSTONE]: {
-    solid: true,
-    transparent: false,
-    drops: BLOCK.GLOWSTONE,
-    hardness: 0.4,
-    gravity: false,
-    light: 15,
-    interact: null
+    texture: "diamond_ore"
   }
 };
