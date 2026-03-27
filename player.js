@@ -102,24 +102,25 @@ function integratePlayer(delta) {
     player.vz = 0;
   }
 
-  // --- Y ---
-  player.onGround = false;
+// --- Y ---
+player.onGround = false;
 
-  // plafond
-  if (player.vy > 0) {
-    if (isSolidAt(nx, ny + height, nz)) {
-      player.vy = 0;
-      ny = Math.floor(ny + height) - height - 0.001;
-    }
+// plafond
+if (player.vy > 0) {
+  if (isSolidAt(nx, ny + height - 0.01, nz)) {
+    player.vy = 0;
+    ny = Math.floor(ny + height) - height - 0.001;
   }
-  // sol
-  else {
-    if (isSolidAt(nx, ny - 0.01, nz)) {
-      player.vy = 0;
-      player.onGround = true;
-      ny = Math.floor(ny) + 1.001;
-    }
+}
+// sol
+else {
+  if (isSolidAt(nx, ny - 0.05, nz)) {
+    player.vy = 0;
+    player.onGround = true;
+    ny = Math.floor(ny) + 1.001;
   }
+}
+
 
   player.x = nx;
   player.y = ny;
