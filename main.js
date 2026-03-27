@@ -387,9 +387,9 @@ function gameLoop() {
     forward.normalize();
 
     const right = new THREE.Vector3();
-    right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize().multiplyScalar(-1);
+    // CORRECTION ICI : vecteur right non inversé
+    right.crossVectors(new THREE.Vector3(0, 1, 0), forward).normalize();
 
-    let move = 0;
     let dirVec = { forward: new THREE.Vector3(0, 0, 0), right: new THREE.Vector3(0, 0, 0), move: 0, jump: false };
 
     let moveX = 0;
