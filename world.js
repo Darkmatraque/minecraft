@@ -42,11 +42,17 @@ function setBlock(x, y, z, id) {
 // ============================
 
 function getSurfaceHeightAt(x, z) {
+  if (x < 0 || x >= WORLD.WIDTH || z < 0 || z >= WORLD.DEPTH) {
+    return 0;
+  }
+
   for (let y = WORLD.HEIGHT - 1; y >= 0; y--) {
-    if (getBlock(x, y, z) !== BLOCK.AIR) {
+    const b = getBlock(x, y, z);
+    if (b !== BLOCK.AIR && BLOCK_DEFS[b] && BLOCK_DEFS[b].solid) {
       return y;
     }
   }
+
   return 0;
 }
 
@@ -57,7 +63,7 @@ function getSurfaceHeightAt(x, z) {
 function generateTerrain() {
   const heights = new Array(WORLD.WIDTH * WORLD.DEPTH);
 
-  // --- Étape 1 : hauteur brute ---
+  // --- hauteur brute ---
   for (let x = 0; x < WORLD.WIDTH; x++) {
     for (let z = 0; z < WORLD.DEPTH; z++) {
 
@@ -86,10 +92,11 @@ function generateTerrain() {
     }
   }
 
-  // --- Étape 2 : lissage ---
+  // --- lissage ---
   const tmp = new Array(WORLD.WIDTH * WORLD.DEPTH);
 
   for (let pass = 0; pass < 3; pass++) {
+
     for (let x = 2; x < WORLD.WIDTH - 2; x++) {
       for (let z = 2; z < WORLD.DEPTH - 2; z++) {
 
@@ -112,7 +119,7 @@ function generateTerrain() {
 
   const waterLevel = 38;
 
-  // --- Étape 3 : blocs + biomes ---
+  // --- blocs ---
   for (let x = 0; x < WORLD.WIDTH; x++) {
     for (let z = 0; z < WORLD.DEPTH; z++) {
 
@@ -184,164 +191,6 @@ function generateTerrain() {
         }
       }
     }
-  }
-}
-
-// ============================
-//  MINERAIS
-// ============================
-
-function generateOres() {
-
-  function carveVein(blockId, veinCount, veinSize, minY, maxY, noiseScale) {
-
-    for (let i = 0; i < veinCount; i++) {
-
-      const cx = Math.floor(Math.random() * WORLD.WIDTH);
-      const cz = Math.floor(Math.random() * WORLD.DEPTH);
-      const cy = minY + Math.floor(Math.random() * (maxY - minY));
-
-      for (let j = 0; j < veinSize; j++) {
-
-        const ox = cx + Math.floor((Math.random() - 0.5) * 6);
-        const oy = cy + Math.floor((Math.random() - 0.5) * 6);
-        const oz = cz + Math.floor((Math.random() - 0.5) * 6);
-
-        if (!inBounds(ox, oy, oz)) continue;
-
-        const b = getBlock(ox, oy, oz);
-
-        if (b === BLOCK.STONE) {
-
-          const n =
-            heightNoise.noise(
-              ox / noiseScale,
-              oz / noiseScale + oy / noiseScale
-            );
-
-          if (n > 0) {
-            setBlock(ox, oy, oz, blockId);
-          }
-        }
-      }
-    }
-  }
-
-  carveVein(BLOCK.COAL_ORE,    200, 18, 20, 70, 40);
-  carveVein(BLOCK.IRON_ORE,    140, 12, 10, 60, 35);
-  carveVein(BLOCK.COPPER_ORE,  120, 10, 20, 60, 35);
-  carveVein(BLOCK.GOLD_ORE,     60,  8,  5, 35, 30);
-  carveVein(BLOCK.DIAMOND_ORE,  40,  7,  5, 20, 25);
-}
-
-// ============================
-//  STRUCTURES
-// ============================
-
-function placeTree(x, z) {
-
-  const y = getSurfaceHeightAt(x, z);
-  if (y <= 0 || y >= WORLD.HEIGHT - 6) return;
-
-  if (getBlock(x, y, z) !== BLOCK.GRASS) return;
-
-  const trunkHeight = 4 + Math.floor(Math.random() * 2);
-
-  for (let i = 1; i <= trunkHeight; i++) {
-    setBlock(x, y + i, z, BLOCK.WOOD);
-  }
-
-  const topY = y + trunkHeight;
-
-  for (let dx = -2; dx <= 2; dx++) {
-    for (let dy = -2; dy <= 2; dy++) {
-      for (let dz = -2; dz <= 2; dz++) {
-
-        if (Math.abs(dx) + Math.abs(dy) + Math.abs(dz) > 4) continue;
-
-        const bx = x + dx;
-        const by = topY + dy;
-        const bz = z + dz;
-
-        if (!inBounds(bx, by, bz)) continue;
-        if (by <= y) continue;
-
-        if (getBlock(bx, by, bz) === BLOCK.AIR) {
-          setBlock(bx, by, bz, BLOCK.LEAVES);
-        }
-      }
-    }
-  }
-}
-
-function placeHouse(x, z) {
-
-  const baseY = getSurfaceHeightAt(x, z);
-  const w = 7, d = 7, h = 4;
-
-  // terrain plat
-  for (let dx = 0; dx < w; dx++) {
-    for (let dz = 0; dz < d; dz++) {
-      const yy = getSurfaceHeightAt(x + dx, z + dz);
-      if (Math.abs(yy - baseY) > 1) return;
-    }
-  }
-
-  // plancher
-  for (let dx = 0; dx < w; dx++) {
-    for (let dz = 0; dz < d; dz++) {
-      setBlock(x + dx, baseY, z + dz, BLOCK.PLANKS);
-    }
-  }
-
-  // murs
-  for (let dx = 0; dx < w; dx++) {
-    for (let dz = 0; dz < d; dz++) {
-
-      const isEdge = dx === 0 || dx === w - 1 || dz === 0 || dz === d - 1;
-      if (!isEdge) continue;
-
-      for (let dy = 1; dy <= h; dy++) {
-
-        const bx = x + dx;
-        const bz = z + dz;
-        const yy = baseY + dy;
-
-        if (dz === Math.floor(d / 2) && dx === 0 && (dy === 1 || dy === 2)) {
-          setBlock(bx, yy, bz, BLOCK.AIR);
-        } else {
-          setBlock(bx, yy, bz, BLOCK.PLANKS);
-        }
-      }
-    }
-  }
-
-  // toit
-  for (let dx = -1; dx <= w; dx++) {
-    for (let dz = -1; dz <= d; dz++) {
-      setBlock(x + dx, baseY + h + 1, z + dz, BLOCK.WOOD);
-    }
-  }
-
-  // fenêtre
-  const wy = baseY + 2;
-  const wx = x + Math.floor(w / 2);
-  const wz = z + d - 1;
-  setBlock(wx, wy, wz, BLOCK.GLASS);
-}
-
-function generateStructures() {
-
-  for (let i = 0; i < 400; i++) {
-    const x = Math.floor(Math.random() * WORLD.WIDTH);
-    const z = Math.floor(Math.random() * WORLD.DEPTH);
-    placeTree(x, z);
-  }
-
-  for (let i = 0; i < 15; i++) {
-    const x = 16 + Math.floor(Math.random() * (WORLD.WIDTH - 32));
-    const z = 16 + Math.floor(Math.random() * (WORLD.DEPTH - 32));
-    placeHouse(x, z);
   }
 }
 
