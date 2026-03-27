@@ -1,148 +1,133 @@
-const PLAYER = {
-  height: 1.9,
-  radius: 0.30,
-  eyeHeight: 1.62,
-  speed: 4.3,
-  jumpSpeed: 8,
-  gravity: 20
-};
+// ============================
+//  JOUEUR & PHYSIQUE
+// ============================
 
-let player = {
-  x: WORLD.WIDTH / 2,
-  y: 60,
-  z: WORLD.DEPTH / 2,
+const PLAYER = {
+  x: 0,
+  y: 70,
+  z: 0,
   vx: 0,
   vy: 0,
   vz: 0,
+  radius: 0.4,
+  height: 1.8,
+  eyeHeight: 1.6,
+  speed: 6,
+  jumpSpeed: 8,
+  gravity: -20,
   onGround: false
 };
 
+let player = {
+  x: PLAYER.x,
+  y: PLAYER.y,
+  z: PLAYER.z
+};
+
 function spawnPlayer() {
+  // spawn au centre du monde, sur le sol
   const sx = Math.floor(WORLD.WIDTH / 2);
   const sz = Math.floor(WORLD.DEPTH / 2);
-  const sy = getSurfaceHeightAt(sx, sz);
+  const sy = getSurfaceHeightAt(sx, sz) + 2;
 
   player.x = sx + 0.5;
   player.z = sz + 0.5;
-  player.y = sy + PLAYER.height + 0.2;
-  player.vx = player.vy = player.vz = 0;
-  player.onGround = false;
+  player.y = sy;
+
+  PLAYER.vx = 0;
+  PLAYER.vy = 0;
+  PLAYER.vz = 0;
+  PLAYER.onGround = false;
 }
 
-function movePlayer(delta, controlsDir) {
-  const accel = PLAYER.speed;
-
-  const forward = controlsDir.forward;
-  const right = controlsDir.right;
-
-  player.vx = (forward.x * accel + right.x * accel) * controlsDir.move;
-  player.vz = (forward.z * accel + right.z * accel) * controlsDir.move;
-
-  if (!player.onGround) {
-    player.vy -= PLAYER.gravity * delta;
-  }
-
-  if (controlsDir.jump && player.onGround) {
-    player.vy = PLAYER.jumpSpeed;
-    player.onGround = false;
-  }
-
-  integratePlayer(delta);
+// collision AABB simple
+function isSolidAt(x, y, z) {
+  const id = getBlock(Math.floor(x), Math.floor(y), Math.floor(z));
+  const def = BLOCK_DEFS[id];
+  return def && def.solid;
 }
 
-function integratePlayer(delta) {
-  let nx = player.x + player.vx * delta;
-  let ny = player.y + player.vy * delta;
-  let nz = player.z + player.vz * delta;
+function movePlayer(delta, dirVec) {
+  // direction horizontale
+  let moveDir = new THREE.Vector3();
+  moveDir.add(dirVec.forward);
+  moveDir.add(dirVec.right);
 
-  const radius = PLAYER.radius;
-  const height = PLAYER.height;
-
-  function isSolidAt(px, py, pz) {
-    const bx = Math.floor(px);
-    const by = Math.floor(py);
-    const bz = Math.floor(pz);
-    const id = getBlock(bx, by, bz);
-    const def = BLOCK_DEFS[id];
-    return def && def.solid;
+  if (dirVec.move > 0) {
+    moveDir.normalize();
+    PLAYER.vx = moveDir.x * PLAYER.speed;
+    PLAYER.vz = moveDir.z * PLAYER.speed;
+  } else {
+    PLAYER.vx = 0;
+    PLAYER.vz = 0;
   }
 
-  // Points de collision verticaux
-  const h1 = ny + 0.1;
-  const h2 = ny + height * 0.5;
-  const h3 = ny + height - 0.1;
+  // gravité
+  PLAYER.vy += PLAYER.gravity * delta;
 
-  /* -------------------------
-     COLLISION X
-  ------------------------- */
+  // saut
+  if (dirVec.jump && PLAYER.onGround) {
+    PLAYER.vy = PLAYER.jumpSpeed;
+    PLAYER.onGround = false;
+  }
+
+  // tentative de déplacement
+  let nx = player.x + PLAYER.vx * delta;
+  let ny = player.y + PLAYER.vy * delta;
+  let nz = player.z + PLAYER.vz * delta;
+
+  // collision horizontale (X/Z)
+  const halfW = PLAYER.radius;
+  const h = PLAYER.height;
+
+  // X
   if (
-    isSolidAt(nx + radius, h1, player.z) ||
-    isSolidAt(nx + radius, h2, player.z) ||
-    isSolidAt(nx + radius, h3, player.z) ||
-    isSolidAt(nx - radius, h1, player.z) ||
-    isSolidAt(nx - radius, h2, player.z) ||
-    isSolidAt(nx - radius, h3, player.z)
+    isSolidAt(nx + halfW, player.y, player.z) ||
+    isSolidAt(nx - halfW, player.y, player.z) ||
+    isSolidAt(nx + halfW, player.y + h * 0.5, player.z) ||
+    isSolidAt(nx - halfW, player.y + h * 0.5, player.z)
   ) {
-    player.vx = 0;
     nx = player.x;
+    PLAYER.vx = 0;
   }
 
-  /* -------------------------
-     COLLISION Z
-  ------------------------- */
+  // Z
   if (
-    isSolidAt(player.x, h1, nz + radius) ||
-    isSolidAt(player.x, h2, nz + radius) ||
-    isSolidAt(player.x, h3, nz + radius) ||
-    isSolidAt(player.x, h1, nz - radius) ||
-    isSolidAt(player.x, h2, nz - radius) ||
-    isSolidAt(player.x, h3, nz - radius)
+    isSolidAt(player.x, player.y, nz + halfW) ||
+    isSolidAt(player.x, player.y, nz - halfW) ||
+    isSolidAt(player.x, player.y + h * 0.5, nz + halfW) ||
+    isSolidAt(player.x, player.y + h * 0.5, nz - halfW)
   ) {
-    player.vz = 0;
     nz = player.z;
+    PLAYER.vz = 0;
   }
 
-  /* -------------------------
-     COLLISION Y (corrigée)
-  ------------------------- */
-  player.onGround = false;
+  // Y (sol / plafond)
+  PLAYER.onGround = false;
 
-  if (player.vy > 0) {
-    // Collision plafond
+  if (PLAYER.vy > 0) {
+    // monte
     if (
-      isSolidAt(nx, ny + height, nz) ||
-      isSolidAt(nx, ny + height - 0.1, nz)
+      isSolidAt(nx, ny + h, nz) ||
+      isSolidAt(nx, ny + h * 0.9, nz)
     ) {
-      player.vy = 0;
-      ny = Math.floor(ny + height) - height - 0.001;
+      ny = Math.floor(ny + h) - h;
+      PLAYER.vy = 0;
     }
   } else {
-    // Collision sol (corrigée)
-    if (isSolidAt(nx, ny - 0.1, nz)) {
-      player.vy = 0;
-      player.onGround = true;
-
-      // Correction anti-collage
-      ny = Math.floor(ny) + 0.05;
+    // descend
+    if (
+      isSolidAt(nx, ny, nz) ||
+      isSolidAt(nx, ny + 0.1, nz)
+    ) {
+      ny = Math.floor(ny) + 0.001;
+      PLAYER.vy = 0;
+      PLAYER.onGround = true;
     }
   }
 
-  /* -------------------------
-     GLISSEMENT EN L'AIR
-  ------------------------- */
-  if (!player.onGround) {
-    nx += player.vx * delta * 0.02;
-    nz += player.vz * delta * 0.02;
-  }
-
-  /* -------------------------
-     APPLICATION
-  ------------------------- */
   player.x = nx;
   player.y = ny;
   player.z = nz;
-
-  if (player.y < 0) {
-    spawnPlayer();
-  }
 }
+
