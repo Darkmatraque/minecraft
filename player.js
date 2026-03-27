@@ -22,11 +22,11 @@ let player = {
 function spawnPlayer() {
   const sx = Math.floor(WORLD.WIDTH / 2);
   const sz = Math.floor(WORLD.DEPTH / 2);
-  const sy = getSurfaceHeightAt(sx, sz) + 3;
+  const sy = getSurfaceHeightAt(sx, sz) + 3; // +3 pour être sûr d'être au-dessus
 
   player.x = sx + 0.5;
   player.z = sz + 0.5;
-  player.y = sy;
+  player.y = sy + 1.8; // hauteur du joueur
   player.vx = player.vy = player.vz = 0;
   player.onGround = false;
 }
