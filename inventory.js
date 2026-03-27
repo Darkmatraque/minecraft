@@ -1,18 +1,31 @@
 /* ============================
-   INVENTAIRE + HOTBAR
+   INVENTAIRE + HOTBAR (COMPATIBLE MAIN.JS)
    ============================ */
 
-const INVENTORY_SIZE = 36; // 27 + 9 hotbar
-const HOTBAR_SIZE = 9;
+const INVENTORY = {
+  open: false,
+  slots: [] // 36 slots (0-8 = hotbar)
+};
 
-let inventory = new Array(INVENTORY_SIZE).fill(null);
-let hotbarIndex = 0; // 0..8
+function initInventory() {
+  INVENTORY.slots = [];
 
-function giveItem(itemId, count = 1) {
-  // stack sur item existant
-  for (let i = 0; i < INVENTORY_SIZE; i++) {
-    const slot = inventory[i];
-    if (slot && slot.id === itemId && slot.count < 64) {
+  for (let i = 0; i < 36; i++) {
+    INVENTORY.slots.push({
+      id: BLOCK.AIR,
+      count: 0
+    });
+  }
+}
+
+/* ============================
+   AJOUT / RETRAIT D’ITEMS
+   ============================ */
+
+function addItem(id, count = 1) {
+  // stack sur slot existant
+  for (let slot of INVENTORY.slots) {
+    if (slot.id === id && slot.count < 64) {
       const space = 64 - slot.count;
       const add = Math.min(space, count);
       slot.count += add;
@@ -22,80 +35,65 @@ function giveItem(itemId, count = 1) {
   }
 
   // sinon, nouveau slot
-  for (let i = 0; i < INVENTORY_SIZE; i++) {
-    if (!inventory[i]) {
-      inventory[i] = { id: itemId, count: Math.min(64, count) };
-      count -= inventory[i].count;
+  for (let slot of INVENTORY.slots) {
+    if (slot.id === BLOCK.AIR) {
+      slot.id = id;
+      slot.count = Math.min(64, count);
+      count -= slot.count;
       if (count <= 0) return true;
     }
   }
 
-  return count <= 0;
-}
-
-function removeItem(itemId, count = 1) {
-  for (let i = 0; i < INVENTORY_SIZE; i++) {
-    const slot = inventory[i];
-    if (!slot || slot.id !== itemId) continue;
-
-    const remove = Math.min(slot.count, count);
-    slot.count -= remove;
-    count -= remove;
-
-    if (slot.count <= 0) inventory[i] = null;
-    if (count <= 0) return true;
-  }
   return false;
 }
 
-function getHotbarItem() {
-  return inventory[hotbarIndex] || null;
+function consumeHotbar(index) {
+  const slot = INVENTORY.slots[index];
+  if (!slot || slot.id === BLOCK.AIR) return;
+
+  slot.count--;
+  if (slot.count <= 0) {
+    slot.id = BLOCK.AIR;
+    slot.count = 0;
+  }
 }
 
-function setHotbarIndex(index) {
-  if (index < 0 || index >= HOTBAR_SIZE) return;
-  hotbarIndex = index;
-}
-
-function cycleHotbar(delta) {
-  hotbarIndex = (hotbarIndex + delta + HOTBAR_SIZE) % HOTBAR_SIZE;
+function getHotbarBlock(index) {
+  return INVENTORY.slots[index].id;
 }
 
 /* ============================
-   UTILISATION EN JEU
+   INVENTAIRE UI
    ============================ */
 
-// Quand tu casses un bloc :
-function onBlockBroken(x, y, z, blockId) {
-  const def = BLOCK_DEFS[blockId];
-  if (!def) return;
-
-  const dropId = def.drops ?? blockId;
-  if (dropId !== BLOCK.AIR) {
-    giveItem(dropId, 1);
-  }
-
-  setBlock(x, y, z, BLOCK.AIR);
+function toggleInventory() {
+  INVENTORY.open = !INVENTORY.open;
+  document.getElementById("inventory").style.display =
+    INVENTORY.open ? "block" : "none";
 }
 
-// Quand tu places un bloc depuis la hotbar :
-function placeBlockFromHotbar(x, y, z) {
-  const slot = getHotbarItem();
-  if (!slot) return;
+function refreshInventoryUI() {
+  const grid = document.getElementById("inventory-grid");
+  grid.innerHTML = "";
 
-  const itemDef = ITEM_DEFS[slot.id];
-  if (!itemDef || itemDef.type !== ITEM_TYPE.BLOCK) return;
+  for (let i = 0; i < INVENTORY.slots.length; i++) {
+    const slot = INVENTORY.slots[i];
+    const def = BLOCK_DEFS[slot.id];
 
-  const blockId = itemDef.blockId;
-  if (!blockId && blockId !== 0) return;
+    const el = document.createElement("div");
+    el.className = "inv-slot";
 
-  if (getBlock(x, y, z) !== BLOCK.AIR) return;
+    if (slot.id !== BLOCK.AIR) {
+      el.textContent = def.name[0];
 
-  setBlock(x, y, z, blockId);
-  slot.count--;
-  if (slot.count <= 0) {
-    // vide le slot
-    const index = hotbarIndex;
-    inventory[index] = null;
+      if (slot.count > 1) {
+        const count = document.createElement("span");
+        count.className = "slot-count";
+        count.textContent = slot.count;
+        el.appendChild(count);
+      }
+    }
+
+    grid.appendChild(el);
   }
 }
