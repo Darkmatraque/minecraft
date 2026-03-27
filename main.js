@@ -139,12 +139,24 @@ function buildChunkMesh(cx, cz) {
     flatShading: true
   });
 
-  const mesh = new THREE.Mesh(geom, mat);
-  mesh.castShadow = false;
-  mesh.receiveShadow = true;
+const mesh = new THREE.Mesh(geom, mat);
+mesh.castShadow = false;
+mesh.receiveShadow = true;
 
-  mesh.position.set(0, 0, 0);
-  return mesh;
+// --- AJOUT DU CONTOUR (wireframe overlay) ---
+const wireMat = new THREE.MeshBasicMaterial({
+  color: 0x000000,
+  wireframe: true,
+  transparent: true,
+  opacity: 0.15
+});
+const wireMesh = new THREE.Mesh(geom, wireMat);
+mesh.add(wireMesh);
+// --------------------------------------------
+
+mesh.position.set(0, 0, 0);
+return mesh;
+
 }
 
 function ensureChunk(cx, cz) {
