@@ -1,7 +1,7 @@
 const WORLD = {
-  WIDTH: 128,
-  DEPTH: 128,
-  HEIGHT: 64,
+  WIDTH: 1024,
+  DEPTH: 1024,
+  HEIGHT: 80,
   CHUNK_SIZE: 16
 };
 
@@ -34,75 +34,83 @@ function getSurfaceHeightAt(x, z) {
   return 0;
 }
 
-/* ---------- TERRAIN LISSÉ ---------- */
+/* ---------- TERRAIN : GRAND, LISSE, AVEC BIOMES ---------- */
 
 function generateTerrain() {
   const heights = new Array(WORLD.WIDTH * WORLD.DEPTH);
 
-  // 1) hauteur brute
+  // 1) hauteur brute (style Minecraft : continents + collines + montagnes)
   for (let x = 0; x < WORLD.WIDTH; x++) {
     for (let z = 0; z < WORLD.DEPTH; z++) {
-      const nx = x / 96;
-      const nz = z / 96;
+      const nx = x / 256;
+      const nz = z / 256;
 
-      const hBase   = heightNoise.noise(nx * 0.8, nz * 0.8);   // grandes formes
-      const hDetail = heightNoise.noise(nx * 2.5, nz * 2.5);   // détails
-      const hMount  = heightNoise.noise(nx * 0.25, nz * 0.25); // montagnes douces
+      const hContinent = heightNoise.noise(nx * 0.3, nz * 0.3);   // grandes masses
+      const hBase      = heightNoise.noise(nx * 0.8, nz * 0.8);   // collines
+      const hDetail    = heightNoise.noise(nx * 3.0, nz * 3.0);   // petits détails
+      const hMount     = heightNoise.noise(nx * 0.2, nz * 0.2);   // montagnes
 
+      let base = 40 + hContinent * 12;
       let height =
-        28 +
-        hBase * 6 +
+        base +
+        hBase * 8 +
         hDetail * 3 +
-        Math.max(0, hMount) * 10; // montagnes mais pas extrêmes
+        Math.max(0, hMount) * 18; // montagnes positives
 
       height = Math.floor(height);
-      if (height < 18) height = 18;
-      if (height > WORLD.HEIGHT - 6) height = WORLD.HEIGHT - 6;
+      if (height < 20) height = 20;
+      if (height > WORLD.HEIGHT - 8) height = WORLD.HEIGHT - 8;
 
       heights[x + z * WORLD.WIDTH] = height;
     }
   }
 
-  // 2) lissage 3x3 répété pour supprimer les “dents”
-  const tmp = new Array(WORLD.WIDTH * WORLD.DEPTH);
-  for (let pass = 0; pass < 2; pass++) {
-    for (let x = 0; x < WORLD.WIDTH; x++) {
-      for (let z = 0; z < WORLD.DEPTH; z++) {
-        if (x === 0 || z === 0 || x === WORLD.WIDTH - 1 || z === WORLD.DEPTH - 1) {
-          tmp[x + z * WORLD.WIDTH] = heights[x + z * WORLD.WIDTH];
-          continue;
-        }
+// --- LISSAGE 5x5 POUR TERRAIN STYLE MINECRAFT ---
+const tmp = new Array(WORLD.WIDTH * WORLD.DEPTH);
 
-        let sum = 0;
-        for (let dx = -1; dx <= 1; dx++) {
-          for (let dz = -1; dz <= 1; dz++) {
-            sum += heights[(x + dx) + (z + dz) * WORLD.WIDTH];
-          }
+for (let pass = 0; pass < 3; pass++) {
+  for (let x = 2; x < WORLD.WIDTH - 2; x++) {
+    for (let z = 2; z < WORLD.DEPTH - 2; z++) {
+
+      let sum = 0;
+      for (let dx = -2; dx <= 2; dx++) {
+        for (let dz = -2; dz <= 2; dz++) {
+          sum += heights[(x + dx) + (z + dz) * WORLD.WIDTH];
         }
-        tmp[x + z * WORLD.WIDTH] = Math.round(sum / 9);
       }
-    }
-    for (let i = 0; i < heights.length; i++) {
-      heights[i] = tmp[i];
+
+      tmp[x + z * WORLD.WIDTH] = Math.round(sum / 25);
     }
   }
 
-  // 3) remplissage blocs + rivières + grottes
-  const waterLevel = 30;
+  // copie vers heights
+  for (let i = 0; i < heights.length; i++) {
+    if (tmp[i] !== undefined) heights[i] = tmp[i];
+  }
+}
 
+
+  const waterLevel = 38;
+
+  // 3) remplissage blocs + biomes + rivières + grottes
   for (let x = 0; x < WORLD.WIDTH; x++) {
     for (let z = 0; z < WORLD.DEPTH; z++) {
-      const nx = x / 96;
-      const nz = z / 96;
+      const nx = x / 256;
+      const nz = z / 256;
 
       const idx2D = x + z * WORLD.WIDTH;
       let height = heights[idx2D];
 
-      // rivières : lignes où la valeur est proche de 0
-      const riverVal = tempNoise.noise(nx * 0.6, nz * 0.6);
-      const isRiver = Math.abs(riverVal) < 0.06;
+      // bruit température / humidité pour les biomes
+      const temp  = tempNoise.noise(nx * 0.6, nz * 0.6);
+      const humid = humidNoise.noise(nx * 0.6, nz * 0.6);
+      const heightNorm = (height - 20) / (WORLD.HEIGHT - 24);
+      const biome = getBiomeAt(temp, humid, heightNorm);
 
-      // si rivière, on rabaisse un peu la hauteur locale
+      // rivières : lignes où la valeur est proche de 0
+      const riverVal = tempNoise.noise(nx * 1.2, nz * 1.2);
+      const isRiver = Math.abs(riverVal) < 0.04;
+
       if (isRiver && height > waterLevel - 1) {
         height = waterLevel - 1;
         heights[idx2D] = height;
@@ -119,7 +127,12 @@ function generateTerrain() {
           }
         } else {
           if (y === height) {
-            if (isRiver && y <= waterLevel + 1) {
+            // bloc de surface selon biome
+            if (biome === BIOME.DESERT || biome === BIOME.BEACH) {
+              block = BLOCK.SAND;
+            } else if (biome === BIOME.SNOW) {
+              block = BLOCK.SNOW; // ou GRASS + SNOW si tu as les deux
+            } else if (biome === BIOME.RIVER && y <= waterLevel + 1) {
               block = BLOCK.SAND;
             } else {
               block = BLOCK.GRASS;
@@ -134,10 +147,10 @@ function generateTerrain() {
         setBlock(x, y, z, block);
       }
 
-      // grottes : on creuse dans la pierre sous un certain niveau
-      for (let y = 8; y < height - 4; y++) {
-        const caveVal = humidNoise.noise(nx * 2.0, (y / 32) * 2.0 + nz * 2.0);
-        if (caveVal > 0.6) {
+      // grottes : on creuse dans la pierre / terre sous un certain niveau
+      for (let y = 10; y < height - 4; y++) {
+        const caveVal = humidNoise.noise(nx * 2.2, (y / 32) * 2.2 + nz * 2.2);
+        if (caveVal > 0.65) {
           const b = getBlock(x, y, z);
           if (b === BLOCK.STONE || b === BLOCK.DIRT) {
             setBlock(x, y, z, BLOCK.AIR);
@@ -247,17 +260,17 @@ function placeHouse(x, z) {
 }
 
 function generateStructures() {
-  // arbres
-  for (let i = 0; i < 250; i++) {
+  // arbres (beaucoup, le monde est grand)
+  for (let i = 0; i < 2000; i++) {
     const x = Math.floor(Math.random() * WORLD.WIDTH);
     const z = Math.floor(Math.random() * WORLD.DEPTH);
     placeTree(x, z);
   }
 
   // maisons / pseudo-villages
-  for (let i = 0; i < 8; i++) {
-    const x = 8 + Math.floor(Math.random() * (WORLD.WIDTH - 16));
-    const z = 8 + Math.floor(Math.random() * (WORLD.DEPTH - 16));
+  for (let i = 0; i < 40; i++) {
+    const x = 16 + Math.floor(Math.random() * (WORLD.WIDTH - 32));
+    const z = 16 + Math.floor(Math.random() * (WORLD.DEPTH - 32));
     placeHouse(x, z);
   }
 }
@@ -283,3 +296,4 @@ function rebuildChunkAt(x, z) {
   }
   ensureChunk(cx, cz);
 }
+
