@@ -9,7 +9,7 @@ const PLAYER = {
 
 let player = {
   x: WORLD.WIDTH / 2,
-  y: 60,
+  y: 60, // position des pieds
   z: WORLD.DEPTH / 2,
   vx: 0,
   vy: 0,
@@ -24,8 +24,13 @@ function spawnPlayer() {
 
   player.x = sx + 0.5;
   player.z = sz + 0.5;
-  player.y = sy + PLAYER.height + 0.2;
-  player.vx = player.vy = player.vz = 0;
+
+  // IMPORTANT : y = pieds
+  player.y = sy + 1.01;
+
+  player.vx = 0;
+  player.vy = 0;
+  player.vz = 0;
   player.onGround = false;
 }
 
@@ -35,8 +40,8 @@ function movePlayer(delta, controlsDir) {
   const forward = controlsDir.forward;
   const right = controlsDir.right;
 
-  player.vx = (forward.x * accel + right.x * accel) * controlsDir.move;
-  player.vz = (forward.z * accel + right.z * accel) * controlsDir.move;
+  player.vx = (forward.x + right.x) * accel * controlsDir.move;
+  player.vz = (forward.z + right.z) * accel * controlsDir.move;
 
   if (!player.onGround) {
     player.vy -= PLAYER.gravity * delta;
@@ -67,39 +72,41 @@ function integratePlayer(delta) {
     return def && def.solid;
   }
 
-  const h1 = ny + 0.1;
-  const h2 = ny + height * 0.5;
-  const h3 = ny + height - 0.1;
+  // === Hauteurs de test du joueur ===
+  const foot = ny + 0.05;
+  const knee = ny + height * 0.5;
+  const head = ny + height - 0.05;
 
-  // X
+  // ===== COLLISION X =====
   if (
-    isSolidAt(nx + radius, h1, player.z) ||
-    isSolidAt(nx + radius, h2, player.z) ||
-    isSolidAt(nx + radius, h3, player.z) ||
-    isSolidAt(nx - radius, h1, player.z) ||
-    isSolidAt(nx - radius, h2, player.z) ||
-    isSolidAt(nx - radius, h3, player.z)
+    isSolidAt(nx + radius, foot, player.z) ||
+    isSolidAt(nx + radius, knee, player.z) ||
+    isSolidAt(nx + radius, head, player.z) ||
+    isSolidAt(nx - radius, foot, player.z) ||
+    isSolidAt(nx - radius, knee, player.z) ||
+    isSolidAt(nx - radius, head, player.z)
   ) {
     player.vx = 0;
     nx = player.x;
   }
 
-  // Z
+  // ===== COLLISION Z =====
   if (
-    isSolidAt(player.x, h1, nz + radius) ||
-    isSolidAt(player.x, h2, nz + radius) ||
-    isSolidAt(player.x, h3, nz + radius) ||
-    isSolidAt(player.x, h1, nz - radius) ||
-    isSolidAt(player.x, h2, nz - radius) ||
-    isSolidAt(player.x, h3, nz - radius)
+    isSolidAt(player.x, foot, nz + radius) ||
+    isSolidAt(player.x, knee, nz + radius) ||
+    isSolidAt(player.x, head, nz + radius) ||
+    isSolidAt(player.x, foot, nz - radius) ||
+    isSolidAt(player.x, knee, nz - radius) ||
+    isSolidAt(player.x, head, nz - radius)
   ) {
     player.vz = 0;
     nz = player.z;
   }
 
-  // Y
+  // ===== COLLISION Y =====
   player.onGround = false;
 
+  // Collision plafond
   if (player.vy > 0) {
     if (
       isSolidAt(nx, ny + height, nz) ||
@@ -108,25 +115,25 @@ function integratePlayer(delta) {
       player.vy = 0;
       ny = Math.floor(ny + height) - height - 0.001;
     }
-  } else {
+  }
+
+  // Collision sol
+  else {
     if (isSolidAt(nx, ny - 0.05, nz)) {
       player.vy = 0;
       player.onGround = true;
-      ny = Math.floor(ny) + 0.001;
-    }
-  }
 
-  if (!player.onGround) {
-    nx += player.vx * delta * 0.02;
-    nz += player.vz * delta * 0.02;
+      // pieds exactement au-dessus du bloc
+      ny = Math.floor(ny) + 1.001;
+    }
   }
 
   player.x = nx;
   player.y = ny;
   player.z = nz;
 
+  // respawn si chute
   if (player.y < 0) {
     spawnPlayer();
   }
 }
-
