@@ -3,29 +3,25 @@
 // ============================
 
 const PLAYER = {
+  radius: 0.4,
+  height: 1.8,
+  eyeHeight: 1.6,
+  speed: 6,
+  jumpSpeed: 8,
+  gravity: -25
+};
+
+let player = {
   x: 0,
   y: 70,
   z: 0,
   vx: 0,
   vy: 0,
   vz: 0,
-  radius: 0.4,
-  height: 1.8,
-  eyeHeight: 1.6,
-  speed: 6,
-  jumpSpeed: 8,
-  gravity: -20,
   onGround: false
 };
 
-let player = {
-  x: PLAYER.x,
-  y: PLAYER.y,
-  z: PLAYER.z
-};
-
 function spawnPlayer() {
-  // spawn au centre du monde, sur le sol
   const sx = Math.floor(WORLD.WIDTH / 2);
   const sz = Math.floor(WORLD.DEPTH / 2);
   const sy = getSurfaceHeightAt(sx, sz) + 2;
@@ -34,14 +30,13 @@ function spawnPlayer() {
   player.z = sz + 0.5;
   player.y = sy;
 
-  PLAYER.vx = 0;
-  PLAYER.vy = 0;
-  PLAYER.vz = 0;
-  PLAYER.onGround = false;
+  player.vx = 0;
+  player.vy = 0;
+  player.vz = 0;
+  player.onGround = false;
 }
 
-// collision AABB simple
-function isSolidAt(x, y, z) {
+function isSolidBlockAt(x, y, z) {
   const id = getBlock(Math.floor(x), Math.floor(y), Math.floor(z));
   const def = BLOCK_DEFS[id];
   return def && def.solid;
@@ -55,74 +50,72 @@ function movePlayer(delta, dirVec) {
 
   if (dirVec.move > 0) {
     moveDir.normalize();
-    PLAYER.vx = moveDir.x * PLAYER.speed;
-    PLAYER.vz = moveDir.z * PLAYER.speed;
+    player.vx = moveDir.x * PLAYER.speed;
+    player.vz = moveDir.z * PLAYER.speed;
   } else {
-    PLAYER.vx = 0;
-    PLAYER.vz = 0;
+    player.vx = 0;
+    player.vz = 0;
   }
 
   // gravité
-  PLAYER.vy += PLAYER.gravity * delta;
+  player.vy += PLAYER.gravity * delta;
 
   // saut
-  if (dirVec.jump && PLAYER.onGround) {
-    PLAYER.vy = PLAYER.jumpSpeed;
-    PLAYER.onGround = false;
+  if (dirVec.jump && player.onGround) {
+    player.vy = PLAYER.jumpSpeed;
+    player.onGround = false;
   }
 
-  // tentative de déplacement
-  let nx = player.x + PLAYER.vx * delta;
-  let ny = player.y + PLAYER.vy * delta;
-  let nz = player.z + PLAYER.vz * delta;
+  let nx = player.x + player.vx * delta;
+  let ny = player.y + player.vy * delta;
+  let nz = player.z + player.vz * delta;
 
-  // collision horizontale (X/Z)
-  const halfW = PLAYER.radius;
+  const r = PLAYER.radius;
   const h = PLAYER.height;
 
-  // X
+  // --- collision X ---
   if (
-    isSolidAt(nx + halfW, player.y, player.z) ||
-    isSolidAt(nx - halfW, player.y, player.z) ||
-    isSolidAt(nx + halfW, player.y + h * 0.5, player.z) ||
-    isSolidAt(nx - halfW, player.y + h * 0.5, player.z)
+    isSolidBlockAt(nx + r, player.y, player.z) ||
+    isSolidBlockAt(nx - r, player.y, player.z) ||
+    isSolidBlockAt(nx + r, player.y + h * 0.5, player.z) ||
+    isSolidBlockAt(nx - r, player.y + h * 0.5, player.z)
   ) {
     nx = player.x;
-    PLAYER.vx = 0;
+    player.vx = 0;
   }
 
-  // Z
+  // --- collision Z ---
   if (
-    isSolidAt(player.x, player.y, nz + halfW) ||
-    isSolidAt(player.x, player.y, nz - halfW) ||
-    isSolidAt(player.x, player.y + h * 0.5, nz + halfW) ||
-    isSolidAt(player.x, player.y + h * 0.5, nz - halfW)
+    isSolidBlockAt(player.x, player.y, nz + r) ||
+    isSolidBlockAt(player.x, player.y, nz - r) ||
+    isSolidBlockAt(player.x, player.y + h * 0.5, nz + r) ||
+    isSolidBlockAt(player.x, player.y + h * 0.5, nz - r)
   ) {
     nz = player.z;
-    PLAYER.vz = 0;
+    player.vz = 0;
   }
 
-  // Y (sol / plafond)
-  PLAYER.onGround = false;
+  // --- collision Y ---
+  player.onGround = false;
 
-  if (PLAYER.vy > 0) {
-    // monte
+  if (player.vy > 0) {
+    // monte → plafond
     if (
-      isSolidAt(nx, ny + h, nz) ||
-      isSolidAt(nx, ny + h * 0.9, nz)
+      isSolidBlockAt(nx, ny + h, nz) ||
+      isSolidBlockAt(nx, ny + h * 0.9, nz)
     ) {
       ny = Math.floor(ny + h) - h;
-      PLAYER.vy = 0;
+      player.vy = 0;
     }
   } else {
-    // descend
+    // descend → sol
     if (
-      isSolidAt(nx, ny, nz) ||
-      isSolidAt(nx, ny + 0.1, nz)
+      isSolidBlockAt(nx, ny, nz) ||
+      isSolidBlockAt(nx, ny + 0.05, nz)
     ) {
       ny = Math.floor(ny) + 0.001;
-      PLAYER.vy = 0;
-      PLAYER.onGround = true;
+      player.vy = 0;
+      player.onGround = true;
     }
   }
 
@@ -130,4 +123,3 @@ function movePlayer(delta, dirVec) {
   player.y = ny;
   player.z = nz;
 }
-
