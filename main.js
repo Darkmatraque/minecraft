@@ -9,11 +9,9 @@ let chunkMeshes = new Map();
 let currentBiomeLabel = BIOME.PLAINS;
 let selectedHotbarIndex = 0;
 
-const CHUNK = {
-  SIZE: WORLD.CHUNK_SIZE
-};
+const CHUNK = { SIZE: WORLD.CHUNK_SIZE };
+const VIEW_RANGE = 2;
 
-const VIEW_RANGE = 2; // distance de chunks visibles (2 = 25 chunks)
 const BLOCK_DIRS = [
   [1, 0, 0], [-1, 0, 0],
   [0, 1, 0], [0, -1, 0],
@@ -77,7 +75,6 @@ function buildChunkMesh(cx, cz) {
         const def = BLOCK_DEFS[id];
         if (!def || !def.solid) continue;
 
-        // Vérifie si un côté est visible
         let visible = false;
 
         for (const [dx, dy, dz] of BLOCK_DIRS) {
@@ -101,8 +98,7 @@ function buildChunkMesh(cx, cz) {
     }
   }
 
-  if (group.children.length === 0) return null;
-  return group;
+  return group.children.length > 0 ? group : null;
 }
 
 function ensureChunk(cx, cz) {
@@ -126,8 +122,10 @@ function updateVisibleChunks() {
     for (let dz = -VIEW_RANGE; dz <= VIEW_RANGE; dz++) {
       const ncx = cx + dx;
       const ncz = cz + dz;
+
       if (ncx < 0 || ncz < 0) continue;
       if (ncx >= WORLD.WIDTH / CHUNK.SIZE || ncz >= WORLD.DEPTH / CHUNK.SIZE) continue;
+
       const key = chunkKey(ncx, ncz);
       needed.add(key);
       ensureChunk(ncx, ncz);
@@ -146,11 +144,13 @@ function rebuildChunkAt(x, z) {
   const cx = Math.floor(x / CHUNK.SIZE);
   const cz = Math.floor(z / CHUNK.SIZE);
   const key = chunkKey(cx, cz);
+
   const old = chunkMeshes.get(key);
   if (old) {
     scene.remove(old);
     chunkMeshes.delete(key);
   }
+
   ensureChunk(cx, cz);
 }
 
@@ -194,7 +194,7 @@ function raycastBlock(maxDist = 6) {
 }
 
 // ============================
-//  CONTROLES & INVENTAIRE
+//  CONTROLES
 // ============================
 
 function initControls() {
@@ -209,9 +209,7 @@ function initControls() {
       }
     }
 
-    if (e.code === "KeyE") {
-      toggleInventory();
-    }
+    if (e.code === "KeyE") toggleInventory();
   });
 
   document.addEventListener("keyup", (e) => {
@@ -220,18 +218,12 @@ function initControls() {
 
   document.addEventListener("wheel", (e) => {
     if (INVENTORY.open) return;
-    if (e.deltaY < 0) {
-      selectedHotbarIndex = (selectedHotbarIndex + 8) % 9;
-    } else {
-      selectedHotbarIndex = (selectedHotbarIndex + 1) % 9;
-    }
+    selectedHotbarIndex = (selectedHotbarIndex + (e.deltaY < 0 ? 8 : 1)) % 9;
     updateHotbarUI();
   });
 
   document.body.addEventListener("click", () => {
-    if (!INVENTORY.open && !pointerLocked) {
-      controls.lock();
-    }
+    if (!INVENTORY.open && !pointerLocked) controls.lock();
   });
 
   controls.addEventListener("lock", () => {
@@ -246,12 +238,8 @@ function initControls() {
 
   document.addEventListener("mousedown", (e) => {
     if (!pointerLocked || INVENTORY.open) return;
-
-    if (e.button === 0) {
-      mineBlock();
-    } else if (e.button === 2) {
-      placeBlock();
-    }
+    if (e.button === 0) mineBlock();
+    else if (e.button === 2) placeBlock();
   });
 
   document.addEventListener("contextmenu", (e) => e.preventDefault());
@@ -269,7 +257,6 @@ function mineBlock() {
   if (id === BLOCK.AIR) return;
 
   addItem(id, 1);
-
   setBlock(hit.x, hit.y, hit.z, BLOCK.AIR);
   rebuildChunkAt(hit.x, hit.z);
 
@@ -286,29 +273,22 @@ function placeBlock() {
 
   const { x, y, z } = hit.placePos;
 
-  const px = player.x;
-  const py = player.y;
-  const pz = player.z;
-
   if (
-    Math.abs(x + 0.5 - px) < PLAYER.radius &&
-    Math.abs(y + 0.5 - py) < PLAYER.height &&
-    Math.abs(z + 0.5 - pz) < PLAYER.radius
-  ) {
-    return;
-  }
+    Math.abs(x + 0.5 - player.x) < PLAYER.radius &&
+    Math.abs(y + 0.5 - player.y) < PLAYER.height &&
+    Math.abs(z + 0.5 - player.z) < PLAYER.radius
+  ) return;
 
   setBlock(x, y, z, blockId);
   rebuildChunkAt(x, z);
 
   consumeHotbar(selectedHotbarIndex);
-
   updateHotbarUI();
   refreshInventoryUI();
 }
 
 // ============================
-//  UI HOTBAR & INFO
+//  UI
 // ============================
 
 function updateHotbarUI() {
@@ -330,8 +310,6 @@ function updateHotbarUI() {
         count.textContent = slot.count;
         slotEl.appendChild(count);
       }
-    } else {
-      slotEl.textContent = "";
     }
 
     hotbarEl.appendChild(slotEl);
@@ -355,7 +333,6 @@ function initScene() {
   renderer = new THREE.WebGLRenderer({ canvas, antialias: false });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(1);
-  renderer.shadowMap.enabled = false;
 
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x87ceeb);
