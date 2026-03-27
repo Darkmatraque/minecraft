@@ -1,5 +1,3 @@
-// Gestion du joueur FPS (position, physique, collisions)
-
 const PLAYER = {
   height: 1.9,
   radius: 0.30,
@@ -69,14 +67,11 @@ function integratePlayer(delta) {
     return def && def.solid;
   }
 
-  // Hauteurs de test basées sur la position prévue (ny)
   const h1 = ny + 0.1;
   const h2 = ny + height * 0.5;
   const h3 = ny + height - 0.1;
 
-  /* ============================
-     COLLISION X
-     ============================ */
+  // X
   if (
     isSolidAt(nx + radius, h1, player.z) ||
     isSolidAt(nx + radius, h2, player.z) ||
@@ -89,9 +84,7 @@ function integratePlayer(delta) {
     nx = player.x;
   }
 
-  /* ============================
-     COLLISION Z
-     ============================ */
+  // Z
   if (
     isSolidAt(player.x, h1, nz + radius) ||
     isSolidAt(player.x, h2, nz + radius) ||
@@ -104,13 +97,10 @@ function integratePlayer(delta) {
     nz = player.z;
   }
 
-  /* ============================
-     COLLISION Y
-     ============================ */
+  // Y
   player.onGround = false;
 
   if (player.vy > 0) {
-    // Tête
     if (
       isSolidAt(nx, ny + height, nz) ||
       isSolidAt(nx, ny + height - 0.1, nz)
@@ -119,7 +109,6 @@ function integratePlayer(delta) {
       ny = Math.floor(ny + height) - height - 0.001;
     }
   } else {
-    // Pieds
     if (isSolidAt(nx, ny - 0.05, nz)) {
       player.vy = 0;
       player.onGround = true;
@@ -127,9 +116,6 @@ function integratePlayer(delta) {
     }
   }
 
-  /* ============================
-     ANTI COLLAGE (glissement)
-     ============================ */
   if (!player.onGround) {
     nx += player.vx * delta * 0.02;
     nz += player.vz * delta * 0.02;
@@ -139,10 +125,7 @@ function integratePlayer(delta) {
   player.y = ny;
   player.z = nz;
 
-  // Respawn si chute dans le vide
   if (player.y < 0) {
     spawnPlayer();
   }
 }
-
-
