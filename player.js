@@ -2,7 +2,7 @@
 
 const PLAYER = {
   height: 1.9,      // ~2 blocs
-  radius: 0.35,
+  radius: 0.30,     // hitbox plus fine
   eyeHeight: 1.62,
   speed: 4.3,
   jumpSpeed: 8,
@@ -26,7 +26,7 @@ function spawnPlayer() {
 
   player.x = sx + 0.5;
   player.z = sz + 0.5;
-  player.y = sy + PLAYER.height + 0.2; // bien au-dessus du sol
+  player.y = sy + PLAYER.height + 0.2;
   player.vx = player.vy = player.vz = 0;
   player.onGround = false;
 }
@@ -69,32 +69,38 @@ function integratePlayer(delta) {
     return def && def.solid;
   }
 
-  const feetY = player.y + 0.1;
-  const headY = player.y + height - 0.1;
+  // Hauteurs de test (évite les collisions trop basses)
+  const feetY = player.y + 0.15;
+  const midY = player.y + height * 0.5;
+  const headY = player.y + height - 0.15;
 
-  // --- X ---
+  // --- COLLISION X ---
   if (
     isSolidAt(nx + radius, feetY, player.z) ||
+    isSolidAt(nx + radius, midY, player.z) ||
     isSolidAt(nx + radius, headY, player.z) ||
     isSolidAt(nx - radius, feetY, player.z) ||
+    isSolidAt(nx - radius, midY, player.z) ||
     isSolidAt(nx - radius, headY, player.z)
   ) {
     player.vx = 0;
     nx = player.x;
   }
 
-  // --- Z ---
+  // --- COLLISION Z ---
   if (
     isSolidAt(player.x, feetY, nz + radius) ||
+    isSolidAt(player.x, midY, nz + radius) ||
     isSolidAt(player.x, headY, nz + radius) ||
     isSolidAt(player.x, feetY, nz - radius) ||
+    isSolidAt(player.x, midY, nz - radius) ||
     isSolidAt(player.x, headY, nz - radius)
   ) {
     player.vz = 0;
     nz = player.z;
   }
 
-  // --- Y ---
+  // --- COLLISION Y ---
   player.onGround = false;
 
   if (player.vy > 0) {
@@ -108,15 +114,20 @@ function integratePlayer(delta) {
     }
   } else {
     // sol
-    if (
-      isSolidAt(nx, ny - 0.1, nz)
-    ) {
+    if (isSolidAt(nx, ny - 0.05, nz)) {
       player.vy = 0;
       player.onGround = true;
       ny = Math.floor(ny) + 0.001;
     }
   }
 
+  // --- ANTI COLLAGE (push-away léger) ---
+  if (!player.onGround) {
+    nx += player.vx * delta * 0.05;
+    nz += player.vz * delta * 0.05;
+  }
+
+  // Mise à jour finale
   player.x = nx;
   player.y = ny;
   player.z = nz;
@@ -125,5 +136,4 @@ function integratePlayer(delta) {
     spawnPlayer();
   }
 }
-
 
