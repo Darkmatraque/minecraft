@@ -139,24 +139,22 @@ function buildChunkMesh(cx, cz) {
     flatShading: true
   });
 
-const mesh = new THREE.Mesh(geom, mat);
-mesh.castShadow = false;
-mesh.receiveShadow = true;
+  const mesh = new THREE.Mesh(geom, mat);
+  mesh.castShadow = false;
+  mesh.receiveShadow = true;
 
-// --- AJOUT DU CONTOUR (wireframe overlay) ---
-const wireMat = new THREE.MeshBasicMaterial({
-  color: 0x000000,
-  wireframe: true,
-  transparent: true,
-  opacity: 0.15
-});
-const wireMesh = new THREE.Mesh(geom, wireMat);
-mesh.add(wireMesh);
-// --------------------------------------------
+  // Wireframe overlay
+  const wireMat = new THREE.MeshBasicMaterial({
+    color: 0x000000,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.15
+  });
+  const wireMesh = new THREE.Mesh(geom, wireMat);
+  mesh.add(wireMesh);
 
-mesh.position.set(0, 0, 0);
-return mesh;
-
+  mesh.position.set(0, 0, 0);
+  return mesh;
 }
 
 function ensureChunk(cx, cz) {
@@ -197,53 +195,6 @@ function updateVisibleChunks() {
   }
 }
 
-let keys = {};
-let pointerLocked = false;
-let hotbarEl, biomeLabelEl, posLabelEl, hintEl;
-
-function initControls() {
-  document.addEventListener("keydown", (e) => {
-    keys[e.code] = true;
-
-    if (e.code >= "Digit1" && e.code <= "Digit4") {
-      selectedHotbarIndex = Number(e.code.slice(-1)) - 1;
-      updateHotbarUI();
-    }
-  });
-
-  document.addEventListener("keyup", (e) => {
-    keys[e.code] = false;
-  });
-
-  document.body.addEventListener("click", () => {
-    if (!pointerLocked) {
-      controls.lock();
-    }
-  });
-
-  controls.addEventListener("lock", () => {
-    pointerLocked = true;
-    hintEl.style.display = "none";
-  });
-
-  controls.addEventListener("unlock", () => {
-    pointerLocked = false;
-    hintEl.style.display = "block";
-  });
-
-  document.addEventListener("mousedown", (e) => {
-    if (!pointerLocked) return;
-
-    if (e.button === 0) {
-      mineBlock();
-    } else if (e.button === 2) {
-      placeBlock();
-    }
-  });
-
-  document.addEventListener("contextmenu", (e) => e.preventDefault());
-}
-
 function getLookRay() {
   const dir = new THREE.Vector3();
   camera.getWorldDirection(dir);
@@ -279,21 +230,115 @@ function raycastBlock(maxDist = 6) {
   return { hit: false };
 }
 
+/* ============================
+   CONTROLES + INVENTAIRE
+   ============================ */
+
+let keys = {};
+let pointerLocked = false;
+let hotbarEl, biomeLabelEl, posLabelEl, hintEl;
+
+function initControls() {
+  // Touches clavier
+  document.addEventListener("keydown", (e) => {
+    keys[e.code] = true;
+
+    // Sélection hotbar 1–9
+    if (e.code.startsWith("Digit")) {
+      const num = Number(e.code.slice(-1));
+      if (num >= 1 && num <= 9) {
+        selectedHotbarIndex = num - 1;
+        updateHotbarUI();
+      }
+    }
+
+    // Ouvrir / fermer inventaire
+    if (e.code === "KeyE") {
+      toggleInventory();
+    }
+  });
+
+  document.addEventListener("keyup", (e) => {
+    keys[e.code] = false;
+  });
+
+  // Molette (scroll)
+  document.addEventListener("wheel", (e) => {
+    if (INVENTORY.open) return;
+
+    if (e.deltaY < 0) {
+      // Scroll vers le haut → slot précédent
+      selectedHotbarIndex = (selectedHotbarIndex + 8) % 9;
+    } else {
+      // Scroll vers le bas → slot suivant
+      selectedHotbarIndex = (selectedHotbarIndex + 1) % 9;
+    }
+    updateHotbarUI();
+  });
+
+  // Pointer lock
+  document.body.addEventListener("click", () => {
+    if (!INVENTORY.open && !pointerLocked) {
+      controls.lock();
+    }
+  });
+
+  controls.addEventListener("lock", () => {
+    pointerLocked = true;
+    hintEl.style.display = "none";
+  });
+
+  controls.addEventListener("unlock", () => {
+    pointerLocked = false;
+    hintEl.style.display = "block";
+  });
+
+  // Clic souris
+  document.addEventListener("mousedown", (e) => {
+    if (!pointerLocked || INVENTORY.open) return;
+
+    if (e.button === 0) {
+      mineBlock();
+    } else if (e.button === 2) {
+      placeBlock();
+    }
+  });
+
+  document.addEventListener("contextmenu", (e) => e.preventDefault());
+}
+
+/* ============================
+   MINAGE + PLACEMENT
+   ============================ */
+
 function mineBlock() {
   const hit = raycastBlock();
   if (!hit.hit) return;
 
+  const id = getBlock(hit.x, hit.y, hit.z);
+  if (id === BLOCK.AIR) return;
+
+  // Ajouter dans l’inventaire
+  addItem(id, 1);
+
+  // Casser le bloc
   setBlock(hit.x, hit.y, hit.z, BLOCK.AIR);
   rebuildChunkAt(hit.x, hit.z);
+
+  updateHotbarUI();
+  updateInventoryUI();
 }
 
 function placeBlock() {
   const hit = raycastBlock();
   if (!hit.hit || !hit.placePos) return;
 
-  const blockId = HOTBAR_BLOCKS[selectedHotbarIndex] || BLOCK.STONE;
+  const blockId = getHotbarBlock(selectedHotbarIndex);
+  if (blockId === BLOCK.AIR) return;
+
   const { x, y, z } = hit.placePos;
 
+  // Empêcher de se placer dans soi-même
   const px = player.x;
   const py = player.y;
   const pz = player.z;
@@ -306,32 +351,47 @@ function placeBlock() {
     return;
   }
 
+  // Placer le bloc
   setBlock(x, y, z, blockId);
   rebuildChunkAt(x, z);
+
+  // Consommer l’item
+  consumeHotbar(selectedHotbarIndex);
+
+  updateHotbarUI();
+  updateInventoryUI();
 }
 
-function rebuildChunkAt(x, z) {
-  const cx = Math.floor(x / CHUNK.SIZE);
-  const cz = Math.floor(z / CHUNK.SIZE);
-  const key = chunkKey(cx, cz);
-  const old = chunkMeshes.get(key);
-  if (old) {
-    scene.remove(old);
-    chunkMeshes.delete(key);
-  }
-  ensureChunk(cx, cz);
-}
+/* ============================
+   UI HOTBAR + INFO
+   ============================ */
 
 function updateHotbarUI() {
   hotbarEl.innerHTML = "";
-  HOTBAR_BLOCKS.forEach((id, i) => {
-    const def = BLOCK_DEFS[id];
-    const slot = document.createElement("div");
-    slot.className = "hotbar-slot";
-    if (i === selectedHotbarIndex) slot.classList.add("selected");
-    slot.textContent = def ? def.name[0] : "?";
-    hotbarEl.appendChild(slot);
-  });
+
+  for (let i = 0; i < 9; i++) {
+    const slot = INVENTORY.slots[i];
+    const def = BLOCK_DEFS[slot.id];
+
+    const slotEl = document.createElement("div");
+    slotEl.className = "hotbar-slot";
+    if (i === selectedHotbarIndex) slotEl.classList.add("selected");
+
+    if (slot.id !== BLOCK.AIR) {
+      slotEl.textContent = def.name[0];
+
+      if (slot.count > 1) {
+        const count = document.createElement("span");
+        count.className = "slot-count";
+        count.textContent = slot.count;
+        slotEl.appendChild(count);
+      }
+    } else {
+      slotEl.textContent = "?";
+    }
+
+    hotbarEl.appendChild(slotEl);
+  }
 }
 
 function updateInfoUI() {
@@ -341,6 +401,10 @@ function updateInfoUI() {
     " Y: " + player.y.toFixed(1) +
     " Z: " + player.z.toFixed(1);
 }
+
+/* ============================
+   SCÈNE, BIOME, GAME LOOP
+   ============================ */
 
 function initScene() {
   canvas = document.getElementById("game-canvas");
@@ -391,17 +455,21 @@ function gameLoop() {
 
   const delta = clock.getDelta();
 
-  if (pointerLocked) {
+  if (pointerLocked && !INVENTORY.open) {
     const forward = new THREE.Vector3();
     camera.getWorldDirection(forward);
     forward.y = 0;
     forward.normalize();
 
     const right = new THREE.Vector3();
-    // ✔️ CORRECTION DÉFINITIVE : forward × up
     right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
 
-    let dirVec = { forward: new THREE.Vector3(0, 0, 0), right: new THREE.Vector3(0, 0, 0), move: 0, jump: false };
+    let dirVec = {
+      forward: new THREE.Vector3(0, 0, 0),
+      right: new THREE.Vector3(0, 0, 0),
+      move: 0,
+      jump: false
+    };
 
     let moveX = 0;
     let moveZ = 0;
@@ -433,23 +501,37 @@ function gameLoop() {
   renderer.render(scene, camera);
 }
 
+/* ============================
+   UI INIT
+   ============================ */
+
 function initUI() {
   hotbarEl = document.getElementById("hotbar");
   biomeLabelEl = document.getElementById("biome-label");
   posLabelEl = document.getElementById("pos-label");
   hintEl = document.getElementById("hint");
+
   updateHotbarUI();
 }
+
+/* ============================
+   MAIN
+   ============================ */
 
 function main() {
   initWorld();
   spawnPlayer();
+
+  initInventory();      // inventory.js
   initScene();
   initUI();
+  initInventoryUI();    // inventory_ui.js
   initControls();
+
   updateVisibleChunks();
   gameLoop();
 }
 
 document.addEventListener("DOMContentLoaded", main);
+
 
