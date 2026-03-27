@@ -1,7 +1,7 @@
 const PLAYER = {
-  height: 1.9,
-  radius: 0.30,
-  eyeHeight: 1.62,
+  height: 1.9,       // taille du joueur (pieds -> tête)
+  radius: 0.30,      // "largeur" pour les collisions
+  eyeHeight: 1.62,   // hauteur des yeux par rapport aux pieds
   speed: 4.3,
   jumpSpeed: 8,
   gravity: 20
@@ -25,7 +25,7 @@ function spawnPlayer() {
   player.x = sx + 0.5;
   player.z = sz + 0.5;
 
-  // pieds exactement au-dessus du sol
+  // pieds juste au-dessus du sol
   player.y = sy + 1.001;
 
   player.vx = 0;
@@ -43,10 +43,10 @@ function movePlayer(delta, controlsDir) {
   player.vx = (forward.x + right.x) * accel * controlsDir.move;
   player.vz = (forward.z + right.z) * accel * controlsDir.move;
 
-  // gravité toujours appliquée
+  // gravité
   player.vy -= PLAYER.gravity * delta;
 
-  // saut uniquement si vraiment au sol
+  // saut seulement si au sol
   if (controlsDir.jump && player.onGround) {
     player.vy = PLAYER.jumpSpeed;
     player.onGround = false;
@@ -125,5 +125,7 @@ function integratePlayer(delta) {
   player.y = ny;
   player.z = nz;
 
-  if (player.y < 0) spawnPlayer();
+  if (player.y < 0) {
+    spawnPlayer();
+  }
 }
