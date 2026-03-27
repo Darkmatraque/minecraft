@@ -67,11 +67,14 @@ function integratePlayer(delta) {
     return def && def.solid;
   }
 
+  // Points de collision verticaux
   const h1 = ny + 0.1;
   const h2 = ny + height * 0.5;
   const h3 = ny + height - 0.1;
 
-  // X
+  /* -------------------------
+     COLLISION X
+  ------------------------- */
   if (
     isSolidAt(nx + radius, h1, player.z) ||
     isSolidAt(nx + radius, h2, player.z) ||
@@ -84,7 +87,9 @@ function integratePlayer(delta) {
     nx = player.x;
   }
 
-  // Z
+  /* -------------------------
+     COLLISION Z
+  ------------------------- */
   if (
     isSolidAt(player.x, h1, nz + radius) ||
     isSolidAt(player.x, h2, nz + radius) ||
@@ -97,10 +102,13 @@ function integratePlayer(delta) {
     nz = player.z;
   }
 
-  // Y
+  /* -------------------------
+     COLLISION Y (corrigée)
+  ------------------------- */
   player.onGround = false;
 
   if (player.vy > 0) {
+    // Collision plafond
     if (
       isSolidAt(nx, ny + height, nz) ||
       isSolidAt(nx, ny + height - 0.1, nz)
@@ -109,18 +117,27 @@ function integratePlayer(delta) {
       ny = Math.floor(ny + height) - height - 0.001;
     }
   } else {
-    if (isSolidAt(nx, ny - 0.05, nz)) {
+    // Collision sol (corrigée)
+    if (isSolidAt(nx, ny - 0.1, nz)) {
       player.vy = 0;
       player.onGround = true;
-      ny = Math.floor(ny) + 0.001;
+
+      // Correction anti-collage
+      ny = Math.floor(ny) + 0.05;
     }
   }
 
+  /* -------------------------
+     GLISSEMENT EN L'AIR
+  ------------------------- */
   if (!player.onGround) {
     nx += player.vx * delta * 0.02;
     nz += player.vz * delta * 0.02;
   }
 
+  /* -------------------------
+     APPLICATION
+  ------------------------- */
   player.x = nx;
   player.y = ny;
   player.z = nz;
