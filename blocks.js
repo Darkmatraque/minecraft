@@ -1,67 +1,23 @@
-// Définition des types de blocs
-
 const BLOCK = {
   AIR: 0,
   GRASS: 1,
   DIRT: 2,
   STONE: 3,
   SAND: 4,
-  SNOW: 5,
-  WOOD: 6,
-  LEAVES: 7
+  WOOD: 5,
+  LEAVES: 6,
+  PLANKS: 7,
+  GLASS: 8
 };
 
 const BLOCK_DEFS = {
-  [BLOCK.AIR]: {
-    id: BLOCK.AIR,
-    name: "Air",
-    solid: false,
-    color: 0x000000,
-    visible: false
-  },
-  [BLOCK.GRASS]: {
-    id: BLOCK.GRASS,
-    name: "Herbe",
-    solid: true,
-    color: 0x3ba34a
-  },
-  [BLOCK.DIRT]: {
-    id: BLOCK.DIRT,
-    name: "Terre",
-    solid: true,
-    color: 0x8b5a2b
-  },
-  [BLOCK.STONE]: {
-    id: BLOCK.STONE,
-    name: "Pierre",
-    solid: true,
-    color: 0x808080
-  },
-  [BLOCK.SAND]: {
-    id: BLOCK.SAND,
-    name: "Sable",
-    solid: true,
-    color: 0xd9c58b
-  },
-  [BLOCK.SNOW]: {
-    id: BLOCK.SNOW,
-    name: "Neige",
-    solid: true,
-    color: 0xf5f5f5
-  },
-  [BLOCK.WOOD]: {
-    id: BLOCK.WOOD,
-    name: "Bois",
-    solid: true,
-    color: 0x8b4513
-  },
-  [BLOCK.LEAVES]: {
-    id: BLOCK.LEAVES,
-    name: "Feuilles",
-    solid: true,
-    color: 0x2e8b57
-  }
+  [BLOCK.AIR]:   { id: BLOCK.AIR,   name: "Air",    color: 0x000000, solid: false },
+  [BLOCK.GRASS]: { id: BLOCK.GRASS, name: "Herbe",  color: 0x3ba53b, solid: true  },
+  [BLOCK.DIRT]:  { id: BLOCK.DIRT,  name: "Terre",  color: 0x8b5a2b, solid: true  },
+  [BLOCK.STONE]: { id: BLOCK.STONE, name: "Pierre", color: 0x777777, solid: true  },
+  [BLOCK.SAND]:  { id: BLOCK.SAND,  name: "Sable",  color: 0xd9d29a, solid: true  },
+  [BLOCK.WOOD]:  { id: BLOCK.WOOD,  name: "Bois",   color: 0x8b5a2b, solid: true  },
+  [BLOCK.LEAVES]:{ id: BLOCK.LEAVES,name: "Feuilles",color: 0x2f8f2f, solid: true },
+  [BLOCK.PLANKS]:{ id: BLOCK.PLANKS,name: "Planches",color: 0xc8a46b, solid: true },
+  [BLOCK.GLASS]: { id: BLOCK.GLASS, name: "Verre",  color: 0x99c9ff, solid: false }
 };
-
-// blocs sélectionnables dans la hotbar
-const HOTBAR_BLOCKS = [BLOCK.GRASS, BLOCK.STONE, BLOCK.SAND, BLOCK.SNOW];
