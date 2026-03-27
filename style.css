@@ -1,3 +1,7 @@
+/* ============================
+   RESET & BASE
+   ============================ */
+
 *,
 *::before,
 *::after {
@@ -23,7 +27,9 @@ body {
   display: block;
 }
 
-/* UI */
+/* ============================
+   UI OVERLAY
+   ============================ */
 
 #ui {
   position: fixed;
@@ -67,6 +73,10 @@ body {
   border: 1px solid rgba(148, 163, 184, 0.7);
 }
 
+/* ============================
+   HOTBAR
+   ============================ */
+
 #hotbar {
   position: absolute;
   left: 50%;
@@ -78,6 +88,7 @@ body {
   background: rgba(15, 23, 42, 0.85);
   border-radius: 999px;
   border: 1px solid rgba(148, 163, 184, 0.7);
+  pointer-events: none;
 }
 
 .hotbar-slot {
@@ -91,9 +102,82 @@ body {
   font-size: 18px;
   color: #e5e7eb;
   background: rgba(15, 23, 42, 0.9);
+  position: relative;
 }
 
 .hotbar-slot.selected {
   border-color: #38bdf8;
   box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.4);
+}
+
+.slot-count {
+  position: absolute;
+  bottom: 2px;
+  right: 4px;
+  font-size: 12px;
+  color: #f8fafc;
+  text-shadow: 0 0 4px #000;
+}
+
+/* ============================
+   INVENTAIRE COMPLET
+   ============================ */
+
+#inventory {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(15, 23, 42, 0.92);
+  padding: 20px;
+  border-radius: 12px;
+  border: 2px solid rgba(148, 163, 184, 0.7);
+  display: none;
+  z-index: 20;
+  pointer-events: auto;
+}
+
+#inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(9, 50px);
+  gap: 8px;
+}
+
+/* Slot d’inventaire */
+.inv-slot {
+  width: 50px;
+  height: 50px;
+  background: rgba(30, 41, 59, 0.9);
+  border: 2px solid rgba(148, 163, 184, 0.4);
+  border-radius: 8px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #e5e7eb;
+  font-size: 20px;
+  user-select: none;
+  cursor: pointer;
+}
+
+.inv-slot:hover {
+  border-color: #38bdf8;
+}
+
+/* Icône du bloc */
+.inv-icon {
+  font-size: 22px;
+  color: #f1f5f9;
+  pointer-events: none;
+}
+
+/* Compteur */
+.inv-count {
+  position: absolute;
+  bottom: 3px;
+  right: 5px;
+  font-size: 14px;
+  color: #f8fafc;
+  text-shadow: 0 0 4px #000;
+  pointer-events: none;
 }
