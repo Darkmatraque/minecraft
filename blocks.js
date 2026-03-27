@@ -8,113 +8,46 @@ const BLOCK = {
   DIRT: 2,
   STONE: 3,
   SAND: 4,
-  SNOW: 5,
-  WATER: 6,
-  WOOD: 7,
+  GRAVEL: 5,
+  LOG: 6,
+  PLANKS: 7,
   LEAVES: 8,
-  PLANKS: 9,
-  GLASS: 10,
-  COAL_ORE: 11,
-  IRON_ORE: 12,
-  COPPER_ORE: 13,
-  GOLD_ORE: 14,
-  DIAMOND_ORE: 15
+  GLASS: 9,
+  WATER: 10,
+  LAVA: 11,
+  COAL_ORE: 12,
+  IRON_ORE: 13,
+  COPPER_ORE: 14,
+  GOLD_ORE: 15,
+  DIAMOND_ORE: 16,
+  GLOWSTONE: 17,
+  CHEST: 18,
+  DOOR_BOTTOM: 19,
+  DOOR_TOP: 20,
+  TORCH: 21
 };
 
 const BLOCK_DEFS = {
-  [BLOCK.AIR]: {
-    id: BLOCK.AIR,
-    name: "Air",
-    solid: false
-  },
-  [BLOCK.GRASS]: {
-    id: BLOCK.GRASS,
-    name: "Grass",
-    solid: true,
-    texture: "grass"
-  },
-  [BLOCK.DIRT]: {
-    id: BLOCK.DIRT,
-    name: "Dirt",
-    solid: true,
-    texture: "dirt"
-  },
-  [BLOCK.STONE]: {
-    id: BLOCK.STONE,
-    name: "Stone",
-    solid: true,
-    texture: "stone"
-  },
-  [BLOCK.SAND]: {
-    id: BLOCK.SAND,
-    name: "Sand",
-    solid: true,
-    texture: "sand"
-  },
-  [BLOCK.SNOW]: {
-    id: BLOCK.SNOW,
-    name: "Snow",
-    solid: true,
-    texture: "snow"
-  },
-  [BLOCK.WATER]: {
-    id: BLOCK.WATER,
-    name: "Water",
-    solid: false,
-    texture: "water"
-  },
-  [BLOCK.WOOD]: {
-    id: BLOCK.WOOD,
-    name: "Wood",
-    solid: true,
-    texture: "wood"
-  },
-  [BLOCK.LEAVES]: {
-    id: BLOCK.LEAVES,
-    name: "Leaves",
-    solid: false,
-    texture: "leaves"
-  },
-  [BLOCK.PLANKS]: {
-    id: BLOCK.PLANKS,
-    name: "Planks",
-    solid: true,
-    texture: "planks"
-  },
-  [BLOCK.GLASS]: {
-    id: BLOCK.GLASS,
-    name: "Glass",
-    solid: false,
-    texture: "glass"
-  },
-  [BLOCK.COAL_ORE]: {
-    id: BLOCK.COAL_ORE,
-    name: "Coal Ore",
-    solid: true,
-    texture: "coal_ore"
-  },
-  [BLOCK.IRON_ORE]: {
-    id: BLOCK.IRON_ORE,
-    name: "Iron Ore",
-    solid: true,
-    texture: "iron_ore"
-  },
-  [BLOCK.COPPER_ORE]: {
-    id: BLOCK.COPPER_ORE,
-    name: "Copper Ore",
-    solid: true,
-    texture: "copper_ore"
-  },
-  [BLOCK.GOLD_ORE]: {
-    id: BLOCK.GOLD_ORE,
-    name: "Gold Ore",
-    solid: true,
-    texture: "gold_ore"
-  },
-  [BLOCK.DIAMOND_ORE]: {
-    id: BLOCK.DIAMOND_ORE,
-    name: "Diamond Ore",
-    solid: true,
-    texture: "diamond_ore"
-  }
+  [BLOCK.AIR]: { solid: false },
+  [BLOCK.GRASS]: { solid: true, texture: BLOCK.GRASS },
+  [BLOCK.DIRT]: { solid: true, texture: BLOCK.DIRT },
+  [BLOCK.STONE]: { solid: true, texture: BLOCK.STONE },
+  [BLOCK.SAND]: { solid: true, texture: BLOCK.SAND },
+  [BLOCK.GRAVEL]: { solid: true, texture: BLOCK.GRAVEL },
+  [BLOCK.LOG]: { solid: true, texture: BLOCK.LOG },
+  [BLOCK.PLANKS]: { solid: true, texture: BLOCK.PLANKS },
+  [BLOCK.LEAVES]: { solid: false, texture: BLOCK.LEAVES },
+  [BLOCK.GLASS]: { solid: false, texture: BLOCK.GLASS },
+  [BLOCK.WATER]: { solid: false, texture: BLOCK.WATER },
+  [BLOCK.LAVA]: { solid: false, texture: BLOCK.LAVA },
+  [BLOCK.COAL_ORE]: { solid: true, texture: BLOCK.COAL_ORE },
+  [BLOCK.IRON_ORE]: { solid: true, texture: BLOCK.IRON_ORE },
+  [BLOCK.COPPER_ORE]: { solid: true, texture: BLOCK.COPPER_ORE },
+  [BLOCK.GOLD_ORE]: { solid: true, texture: BLOCK.GOLD_ORE },
+  [BLOCK.DIAMOND_ORE]: { solid: true, texture: BLOCK.DIAMOND_ORE },
+  [BLOCK.GLOWSTONE]: { solid: true, texture: BLOCK.GLOWSTONE },
+  [BLOCK.CHEST]: { solid: true, texture: BLOCK.CHEST },
+  [BLOCK.DOOR_BOTTOM]: { solid: true, texture: BLOCK.DOOR_BOTTOM },
+  [BLOCK.DOOR_TOP]: { solid: true, texture: BLOCK.DOOR_TOP },
+  [BLOCK.TORCH]: { solid: false, texture: BLOCK.TORCH }
 };
