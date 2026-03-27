@@ -1,13 +1,14 @@
 // Gestion du joueur FPS (position, physique, collisions)
 
 const PLAYER = {
-  height: 1.8,
-  radius: 0.4,
-  eyeHeight: 1.6,
-  speed: 6,
+  height: 1.9,      // Minecraft = 1.8 mais 1.9 évite les collisions foireuses
+  radius: 0.35,     // hitbox plus fine = déplacements plus fluides
+  eyeHeight: 1.62,  // hauteur de caméra EXACTE de Minecraft
+  speed: 4.3,       // vitesse Minecraft
   jumpSpeed: 8,
   gravity: 20
 };
+
 
 let player = {
   x: WORLD.WIDTH / 2,
